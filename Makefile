@@ -15,4 +15,4 @@ dev-frontend:
 	cd frontend && bun dev -- --host
 
 dev:
-	$(MAKE) dev-backend && $(MAKE) dev-frontend
+	$(MAKE) dev-backend & $(MAKE) dev-frontend
