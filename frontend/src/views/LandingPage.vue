@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import BaseButton from '@/components/Global/BaseButton.vue';
+import FeaturesSection from '@/components/MainLayout/LandingPage/FeaturesSection.vue';
+import FaqSection from '@/components/MainLayout/LandingPage/FaqSection.vue';
 
 // Navigation links
 const navLinks = ref([
@@ -8,40 +10,6 @@ const navLinks = ref([
   { text: 'How It Works', href: '#how-it-works' },
   { text: 'FAQ', href: '#faq' },
   { text: 'Contact', href: '#contact' }
-]);
-
-// Features data
-const features = ref([
-  {
-    title: 'Smart Scheduling',
-    description: 'Intelligently organize your class schedules, assignments, and exams in one place.',
-    icon: '📅'
-  },
-  {
-    title: 'Real-time Collaboration',
-    description: 'Share calendars with students, teachers, and staff for better coordination.',
-    icon: '👥'
-  },
-  {
-    title: 'Automated Reminders',
-    description: 'Never miss important deadlines with customizable notification settings.',
-    icon: '🔔'
-  },
-  {
-    title: 'Resource Management',
-    description: 'Efficiently allocate classrooms, labs, and equipment to avoid conflicts.',
-    icon: '🏫'
-  },
-  {
-    title: 'Secure',
-    description: 'Your data is protected with industry-standard encryption and security practices.',
-    icon: '🔒'
-  },
-  {
-    title: 'Customizable',
-    description: 'Tailor the calendar to fit your institution\'s specific needs and branding.',
-    icon: '🎨'
-  }
 ]);
 
 // How it works steps
@@ -68,25 +36,33 @@ const steps = ref([
   }
 ]);
 
-// FAQ items
-const faqItems = ref([
-  {
-    question: 'How secure is the platform?',
-    answer: 'We use industry-standard encryption and security practices to ensure your data is always protected. Our servers are regularly audited for security compliance.'
-  },
-  {
-    question: 'Can I integrate with other school management systems?',
-    answer: 'Yes! Our API allows for seamless integration with popular LMS platforms, student information systems, and other educational tools.'
-  },
-  {
-    question: 'Is there a mobile app available?',
-    answer: 'Absolutely. Our mobile apps for iOS and Android provide the same great experience on the go, with push notifications for important events.'
-  },
-  {
-    question: 'How many users can I add to my account?',
-    answer: 'Our plans are designed to scale with your needs, from small classrooms to entire school districts.'
+const activeFaqIndex = ref<number | null>(null);
+
+const animatedSections = ref<HTMLElement[]>([]);
+onMounted(() => {
+  animatedSections.value = Array.from(document.querySelectorAll('.animated-section'));
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.55 }); 
+  
+  animatedSections.value.forEach(section => {
+    observer.observe(section);
+  });
+});
+
+const toggleFaq = (index: number) => {
+  if (activeFaqIndex.value === index) {
+    activeFaqIndex.value = null;
+  } else {
+    activeFaqIndex.value = index;
   }
-]);
+};
 </script>
 
 <template>
@@ -119,22 +95,12 @@ const faqItems = ref([
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features">
-      <div class="section-header">
-        <h2>Features That Make a Difference</h2>
-        <p>Designed specifically for educational institutions</p>
-      </div>
-      <div class="feature-grid">
-        <div v-for="(feature, index) in features" :key="index" class="feature-card">
-          <div class="feature-icon">{{ feature.icon }}</div>
-          <h3>{{ feature.title }}</h3>
-          <p>{{ feature.description }}</p>
-        </div>
-      </div>
-    </section>
+    <div class="animated-section">
+      <FeaturesSection />
+    </div>
 
     <!-- How It Works Section -->
-    <section id="how-it-works" class="how-it-works">
+    <section id="how-it-works" class="how-it-works animated-section">
       <div class="section-header">
         <h2>How It Works</h2>
         <p>Get up and running in minutes</p>
@@ -149,30 +115,21 @@ const faqItems = ref([
     </section>
 
     <!-- FAQ Section -->
-    <section id="faq" class="faq">
-      <div class="section-header">
-        <h2>Frequently Asked Questions</h2>
-        <p>Everything you need to know about ClassCal</p>
-      </div>
-      <div class="faq-container">
-        <div v-for="(item, index) in faqItems" :key="index" class="faq-item">
-          <h3>{{ item.question }}</h3>
-          <p>{{ item.answer }}</p>
-        </div>
-      </div>
-    </section>
+    <div class="animated-section">
+      <FaqSection />
+    </div>
 
-    <!-- CTA Section -->
-    <section class="cta">
+    <!-- Call to Action Section -->
+    <section class="cta animated-section">
       <div class="cta-content">
         <h2>Ready to transform your school scheduling?</h2>
         <p>Join thousands of educational institutions already using ClassCal</p>
-        <BaseButton text="Start Your Free Trial" variant="primary" size="large" />
+        <BaseButton text="Get Started Now" variant="primary" size="large" />
       </div>
     </section>
 
     <!-- Footer -->
-    <footer id="contact" class="footer">
+    <footer id="contact" class="footer animated-section">
       <div class="footer-grid">
         <div class="footer-col">
           <h3>ClassCal</h3>
@@ -335,48 +292,6 @@ h1, h2, h3, h4, h5, h6 {
   color: #6b7280;
 }
 
-/* Features section */
-.features {
-  padding: 5rem 5%;
-  background-color: white;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.feature-card {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #1f2937;
-}
-
-.feature-card p {
-  color: #6b7280;
-}
-
 /* How it works section */
 .how-it-works {
   padding: 5rem 5%;
@@ -412,37 +327,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .step-card p {
-  color: #6b7280;
-}
-
-/* FAQ section */
-.faq {
-  padding: 5rem 5%;
-  background-color: white;
-}
-
-.faq-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.faq-item {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.faq-item:last-child {
-  border-bottom: none;
-}
-
-.faq-item h3 {
-  font-size: 1.3rem;
-  margin-bottom: 1rem;
-  color: #1f2937;
-}
-
-.faq-item p {
   color: #6b7280;
 }
 
@@ -543,6 +427,18 @@ h1, h2, h3, h4, h5, h6 {
   color: white;
 }
 
+/* Animation styles */
+.animated-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.animated-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .hero {
@@ -562,10 +458,6 @@ h1, h2, h3, h4, h5, h6 {
 
   .cta-buttons {
     justify-content: center;
-  }
-
-  .feature-grid, .steps-container {
-    grid-template-columns: 1fr;
   }
 
   .navbar {
