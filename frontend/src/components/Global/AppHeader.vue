@@ -3,7 +3,12 @@
 </script>
 
 <template>
-  <div>
-    
-  </div>
+  <nav>
+    sigma
+
+  </nav>
 </template>
+
+<style scoped>
+
+</style>
