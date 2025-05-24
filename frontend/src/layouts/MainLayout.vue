@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
-import { useRoute } from 'vue-router';
-const AppHeader = defineAsyncComponent(() => import('../components/Global/AppHeader.vue'))
+import { ref, onMounted, onUnmounted, defineAsyncComponent } from "vue";
+import { useRoute } from "vue-router";
+const AppHeader = defineAsyncComponent(
+  () => import("../components/Global/AppHeader.vue"),
+);
 
 const isMobile = ref(false);
 
@@ -11,31 +13,29 @@ const checkScreenSize = () => {
 
 onMounted(() => {
   checkScreenSize();
-  window.addEventListener('resize', checkScreenSize);
+  window.addEventListener("resize", checkScreenSize);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkScreenSize);
+  window.removeEventListener("resize", checkScreenSize);
 });
 
-const hiddenRoutes : string[] = ['/auth', '/'];
+const hiddenRoutes: string[] = ["/auth", "/"];
 
-function isHiddenRoute() : boolean {
+function isHiddenRoute(): boolean {
   const route = useRoute().path;
   return hiddenRoutes.includes(route);
 }
 </script>
 
 <template>
-  <div class="container" :class="{ 'mobile': isMobile }">
-
+  <div class="container" :class="{ mobile: isMobile }">
     <header>
       <AppHeader v-if="!isHiddenRoute()" />
     </header>
     <main>
       <RouterView />
     </main>
-
   </div>
 </template>
 
@@ -51,7 +51,6 @@ function isHiddenRoute() : boolean {
 }
 
 header {
-  padding: 1rem 0;
   width: 100%;
 }
 
@@ -66,10 +65,6 @@ main {
   .container {
     max-width: 100%;
     padding: 0;
-  }
-
-  header {
-    padding: 1.5rem 0;
   }
 }
 
