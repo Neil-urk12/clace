@@ -3,7 +3,6 @@ import SearchBar from "./SearchBar.vue";
 
 const handleSearch = (query: string) => {
   console.log("Searching for:", query);
-  // Implement search functionality here
 };
 </script>
 
@@ -119,6 +118,7 @@ const handleSearch = (query: string) => {
 .icon-group {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
