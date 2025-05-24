@@ -1,68 +1,72 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import BaseButton from '@/components/Global/BaseButton.vue';
-import FeaturesSection from '@/components/MainLayout/LandingPage/FeaturesSection.vue';
-import FaqSection from '@/components/MainLayout/LandingPage/FaqSection.vue';
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import BaseButton from "@/components/Global/BaseButton.vue";
+import FeaturesSection from "@/components/MainLayout/LandingPage/FeaturesSection.vue";
+import FaqSection from "@/components/MainLayout/LandingPage/FaqSection.vue";
+
+const router = useRouter();
 
 // Navigation links
 const navLinks = ref([
-  { text: 'Features', href: '#features' },
-  { text: 'How It Works', href: '#how-it-works' },
-  { text: 'FAQ', href: '#faq' },
-  { text: 'Contact', href: '#contact' }
+  { text: "Features", href: "#features" },
+  { text: "How It Works", href: "#how-it-works" },
+  { text: "FAQ", href: "#faq" },
+  { text: "Contact", href: "#contact" },
 ]);
 
 // How it works steps
 const steps = ref([
   {
-    title: 'Sign Up',
-    description: 'Create your account in seconds and set up your school profile.',
-    icon: '1️⃣'
+    title: "Sign Up",
+    description:
+      "Create your account in seconds and set up your school profile.",
+    icon: "1️⃣",
   },
   {
-    title: 'Import Data',
-    description: 'Easily import existing schedules or create new ones from scratch.',
-    icon: '2️⃣'
+    title: "Import Data",
+    description:
+      "Easily import existing schedules or create new ones from scratch.",
+    icon: "2️⃣",
   },
   {
-    title: 'Customize',
-    description: 'Tailor the calendar to fit your institution\'s specific needs and branding.',
-    icon: '3️⃣'
+    title: "Customize",
+    description:
+      "Tailor the calendar to fit your institution's specific needs and branding.",
+    icon: "3️⃣",
   },
   {
-    title: 'Share & Collaborate',
-    description: 'Invite staff and students to view and interact with your calendars.',
-    icon: '4️⃣'
-  }
+    title: "Share & Collaborate",
+    description:
+      "Invite staff and students to view and interact with your calendars.",
+    icon: "4️⃣",
+  },
 ]);
 
 const activeFaqIndex = ref<number | null>(null);
 
 const animatedSections = ref<HTMLElement[]>([]);
 onMounted(() => {
-  animatedSections.value = Array.from(document.querySelectorAll('.animated-section'));
-  
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.55 }); 
-  
-  animatedSections.value.forEach(section => {
+  animatedSections.value = Array.from(
+    document.querySelectorAll(".animated-section"),
+  );
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.55 },
+  );
+
+  animatedSections.value.forEach((section) => {
     observer.observe(section);
   });
 });
-
-const toggleFaq = (index: number) => {
-  if (activeFaqIndex.value === index) {
-    activeFaqIndex.value = null;
-  } else {
-    activeFaqIndex.value = index;
-  }
-};
 </script>
 
 <template>
@@ -71,11 +75,21 @@ const toggleFaq = (index: number) => {
     <nav class="navbar">
       <div class="logo">Clace</div>
       <div class="nav-links">
-        <a v-for="(link, index) in navLinks" :key="index" :href="link.href">{{ link.text }}</a>
+        <a v-for="(link, index) in navLinks" :key="index" :href="link.href">{{
+          link.text
+        }}</a>
       </div>
       <div class="auth-buttons">
-        <BaseButton text="Log In" variant="secondary" />
-        <BaseButton text="Sign Up Free" variant="primary" />
+        <BaseButton
+          text="Log In"
+          variant="secondary"
+          @click="router.push('/auth')"
+        />
+        <BaseButton
+          text="Sign Up Free"
+          variant="primary"
+          @click="router.push('/auth')"
+        />
       </div>
     </nav>
 
@@ -83,9 +97,16 @@ const toggleFaq = (index: number) => {
     <section class="hero">
       <div class="hero-content">
         <h1>Simplify School Scheduling</h1>
-        <p>The all-in-one calendar solution designed for educational institutions</p>
+        <p>
+          The all-in-one calendar solution designed for educational institutions
+        </p>
         <div class="cta-buttons">
-          <BaseButton text="Get Started For Free" variant="primary" size="large" />
+          <BaseButton
+            text="Get Started For Free"
+            variant="primary"
+            size="large"
+            @click="router.push('/auth')"
+          />
           <BaseButton text="Watch Demo" variant="outline" />
         </div>
       </div>
@@ -124,7 +145,12 @@ const toggleFaq = (index: number) => {
       <div class="cta-content">
         <h2>Ready to transform your school scheduling?</h2>
         <p>Join thousands of educational institutions already using ClassCal</p>
-        <BaseButton text="Get Started Now" variant="primary" size="large" />
+        <BaseButton
+          text="Get Started Now"
+          variant="primary"
+          size="large"
+          @click="router.push('/auth')"
+        />
       </div>
     </section>
 
@@ -133,7 +159,9 @@ const toggleFaq = (index: number) => {
       <div class="footer-grid">
         <div class="footer-col">
           <h3>ClassCal</h3>
-          <p>Making educational scheduling simple, efficient, and collaborative.</p>
+          <p>
+            Making educational scheduling simple, efficient, and collaborative.
+          </p>
         </div>
         <div class="footer-col">
           <h4>Product</h4>
@@ -161,7 +189,9 @@ const toggleFaq = (index: number) => {
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; {{ new Date().getFullYear() }} ClassCal. All rights reserved.</p>
+        <p>
+          &copy; {{ new Date().getFullYear() }} ClassCal. All rights reserved.
+        </p>
         <div class="footer-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
@@ -174,12 +204,17 @@ const toggleFaq = (index: number) => {
 <style scoped>
 /* General styles */
 .landing-page {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   line-height: 1.6;
   color: #333;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin-top: 0;
   line-height: 1.2;
 }
@@ -369,7 +404,8 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 3rem;
 }
 
-.footer-col h3, .footer-col h4 {
+.footer-col h3,
+.footer-col h4 {
   color: white;
   margin-bottom: 1.5rem;
 }
@@ -431,7 +467,9 @@ h1, h2, h3, h4, h5, h6 {
 .animated-section {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
 }
 
 .animated-section.visible {
