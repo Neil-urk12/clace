@@ -578,7 +578,7 @@ const toggleAuthMode = () => {
   }
 
   .left-panel {
-    padding: 2rem;
+    display: none;
   }
 
   .right-panel {
