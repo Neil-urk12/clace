@@ -1,35 +1,42 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '../layouts/MainLayout.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import MainLayout from "../layouts/MainLayout.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'main',
+      path: "/",
+      name: "main",
       component: MainLayout,
       children: [
         {
-          path: '',
-          name: 'landing',
-          component: () => import('../views/LandingPage.vue'),
+          path: "",
+          name: "landing",
+          component: () => import("../views/LandingPage.vue"),
         },
         {
-          path: '/dashboard',
-          name: 'dashboard',
-          component: () => import('../views/DashboardView.vue'),
-        }
+          path: "/dashboard",
+          name: "dashboard",
+          component: () => import("../views/DashboardView.vue"),
+        },
+        {
+          path: "/calendar",
+          name: "calendar",
+          component: () => import("../views/CalendarView.vue"),
+          // component: () =>
+          //   import("../components/Calendar/MobileCalendarDemo.vue"),
+        },
       ],
     },
     {
       path: "/admin",
       name: "admin",
-      component: () => import('../views/AdminView.vue'),
+      component: () => import("../views/AdminView.vue"),
     },
     {
-      path: '/auth',
-      name: 'auth',
-      component: () => import('../views/AuthView.vue'),
+      path: "/auth",
+      name: "auth",
+      component: () => import("../views/AuthView.vue"),
     },
     // {
     //   path: '/about',
@@ -40,6 +47,6 @@ const router = createRouter({
     //   component: () => import('../views/AboutView.vue'),
     // },
   ],
-})
+});
 
-export default router
+export default router;

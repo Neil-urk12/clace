@@ -1,44 +1,33 @@
 <script setup lang="ts">
 import { ClockIcon, MapPinIcon, CheckCircle2Icon, BookIcon } from 'lucide-vue-next';
-
-interface ActivityItem {
-  id: string | number;
-  title: string;
-  type: 'Assignment' | 'Quiz' | 'Project' | 'Reminder' | 'ClassSession' | 'Exam';
-  subject?: string;
-  dueDate: { day: string; month: string; year?: number; time?: string };
-  details?: string;
-  status?: 'Pending' | 'InProgress' | 'Completed' | 'Submitted' | 'Graded' | 'Overdue';
-  course?: string;
-  location?: string;
-  imageUrl?: string;
-  activityDateObject: Date;
-}
+import type { SharedEventItem } from '@/types/event'; // Corrected import path
 
 interface Props {
-  activity: ActivityItem;
+  activity: SharedEventItem;
 }
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const getStatusIcon = (status?: ActivityItem['status']) => {
+const getStatusIcon = (status?: SharedEventItem['status']) => {
   if (status === 'Completed' || status === 'Graded' || status === 'Submitted') {
     return CheckCircle2Icon;
   }
   return null;
 };
+
+const formatDate = (date: Date): string => {
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(date).toLocaleDateString(undefined, options);
+};
 </script>
 
 <template>
-  <div class="activity-card">
+  <div class="event-card" :class="activity.type?.toLowerCase()">
     <div class="card-image-container">
       <img v-if="activity.imageUrl" :src="activity.imageUrl" :alt="activity.title" class="activity-image" />
       <div v-else class="activity-image-placeholder">
         <span>{{ activity.type }}</span>
       </div>
-      <div class="date-badge">
-        <span class="day">{{ activity.dueDate.day }}</span>
-        <span class="month">{{ activity.dueDate.month }}</span>
-      </div>
+      <!-- Date badge removed as per SharedEventItem structure -->
       <div v-if="activity.type" class="image-overlay-type">{{ activity.type }}</div>
     </div>
     <div class="card-content">
@@ -52,12 +41,10 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
           :size="20"
         />
       </div>
-      <p v-if="activity.details" class="activity-details-text">{{ activity.details }}</p>
+      <p v-if="activity.description" class="activity-details-text">{{ activity.description }}</p>
 
       <div class="activity-info">
-        <div v-if="activity.dueDate.time" class="detail-item">
-          <ClockIcon :size="16" class="detail-icon" /> <span>{{ activity.dueDate.time }}</span>
-        </div>
+        <!-- Time removed as per SharedEventItem structure -->
         <div v-if="activity.location" class="detail-item">
           <MapPinIcon :size="16" class="detail-icon" /> <span>{{ activity.location }}</span>
         </div>
@@ -67,13 +54,16 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
          <div v-else-if="activity.course" class="detail-item">
           <BookIcon :size="16" class="detail-icon" /> <span>{{ activity.course }}</span>
         </div>
+        <div v-if="activity.startDate" class="detail-item">
+           <ClockIcon :size="16" class="detail-icon" /> <span>{{ formatDate(activity.startDate) }}</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.activity-card {
+.event-card { /* Changed from .activity-card */
   background-color: #ffffff;
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -83,7 +73,7 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.activity-card:hover {
+.event-card:hover { /* Changed from .activity-card:hover */
   transform: translateY(-4px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
@@ -113,33 +103,7 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
   font-weight: 500;
 }
 
-.date-badge {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  z-index: 1;
-}
-
-.date-badge .day {
-  display: block;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #1f2937;
-  line-height: 1.1;
-}
-
-.date-badge .month {
-  display: block;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #4b5563;
-  line-height: 1.1;
-}
+/* Date badge styles removed as per template update */
 
 .image-overlay-type {
   position: absolute;
@@ -169,7 +133,7 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
   margin-bottom: 0.5rem;
 }
 
-.activity-title {
+.activity-title { /* Kept activity-title class */
   font-size: 1.125rem;
   font-weight: 600;
   color: #111827;
@@ -187,14 +151,14 @@ const getStatusIcon = (status?: ActivityItem['status']) => {
 }
 
 
-.activity-details-text {
+.activity-details-text { /* Kept activity-details-text class */
   font-size: 0.875rem;
   color: #4b5563;
   margin-bottom: 0.75rem;
   line-height: 1.4;
 }
 
-.activity-info {
+.activity-info { /* Kept activity-info class */
   margin-top: auto;
   padding-top: 0.75rem;
   font-size: 0.875rem;

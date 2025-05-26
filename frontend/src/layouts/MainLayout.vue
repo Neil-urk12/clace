@@ -20,7 +20,7 @@ onUnmounted(() => {
   window.removeEventListener("resize", checkScreenSize);
 });
 
-const hiddenRoutes: string[] = ["/auth", "/"];
+const hiddenRoutes: string[] = ["/auth", "/", "/calendar"];
 
 function isHiddenRoute(): boolean {
   const route = useRoute().path;
@@ -48,6 +48,7 @@ function isHiddenRoute(): boolean {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  min-height: 100vh;
 }
 
 header {
