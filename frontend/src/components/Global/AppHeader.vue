@@ -14,13 +14,9 @@ const handleSearch = (query: string) => {
         <div class="logo">
           <h1 class="logo-text">Clace</h1>
         </div>
-
+        
         <div class="icon-group">
-          <!-- Search bar for large screens -->
-          <div class="search-large">
-            <SearchBar @search="handleSearch" />
-          </div>
-
+          <SearchBar @search="handleSearch" />
           <button class="action-button" aria-label="Calendar">
             <svg
               width="24"
@@ -105,7 +101,6 @@ const handleSearch = (query: string) => {
 
 .top-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
@@ -118,9 +113,9 @@ const handleSearch = (query: string) => {
 .icon-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
 }
+
 
 .logo-text {
   font-size: 1.75rem;
@@ -137,10 +132,6 @@ const handleSearch = (query: string) => {
   width: 100%;
 }
 
-.search-large {
-  display: none;
-  max-width: 300px;
-}
 
 .action-button {
   display: flex;
@@ -162,9 +153,6 @@ const handleSearch = (query: string) => {
 }
 
 @media (min-width: 1024px) {
-  .search-large {
-    display: block;
-  }
 
   .search-row {
     display: none;
@@ -177,6 +165,16 @@ const handleSearch = (query: string) => {
   .icon-group {
     gap: 1rem;
   }
+
+  .icon-group .search-container {
+    display: flex; /* Show search bar in icon group on desktop */
+  }
+}
+
+@media (max-width: 1023px) {
+  .icon-group .search-container {
+    display: none; /* Hide search bar in icon group on mobile */
+  }
 }
 
 /* Mobile Responsive */
@@ -184,6 +182,10 @@ const handleSearch = (query: string) => {
   .header-container {
     padding: 1rem;
     gap: 0.75rem;
+  }
+
+  .top-row {
+    justify-content: space-between;
   }
 
   .logo-text {
