@@ -81,15 +81,13 @@ onMounted(() => {
       </div>
       <div class="auth-buttons">
         <BaseButton
-          text="Log In"
-          variant="secondary"
+          design="secondary"
           @click="router.push('/auth')"
-        />
+        >Log In</BaseButton>
         <BaseButton
-          text="Sign Up Free"
-          variant="primary"
+          design="primary"
           @click="router.push('/auth')"
-        />
+        >Sign Up Free</BaseButton>
       </div>
     </nav>
 
@@ -102,12 +100,11 @@ onMounted(() => {
         </p>
         <div class="cta-buttons">
           <BaseButton
-            text="Get Started For Free"
-            variant="primary"
+            design="primary"
             size="large"
             @click="router.push('/auth')"
-          />
-          <BaseButton text="Watch Demo" variant="outline" />
+          >Get Started For Free</BaseButton>
+          <BaseButton design="outline">Watch Demo</BaseButton>
         </div>
       </div>
       <div class="hero-image">
@@ -146,11 +143,10 @@ onMounted(() => {
         <h2>Ready to transform your school scheduling?</h2>
         <p>Join thousands of educational institutions already using ClassCal</p>
         <BaseButton
-          text="Get Started Now"
-          variant="primary"
+          design="primary"
           size="large"
           @click="router.push('/auth')"
-        />
+        >Get Started Now</BaseButton>
       </div>
     </section>
 
