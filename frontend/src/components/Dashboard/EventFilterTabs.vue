@@ -1,41 +1,86 @@
 <script setup lang="ts">
-
+import { computed } from 'vue';
 interface Props {
-  counts: { All: number; Today: number; NextWeek: number; NextMonth: number; };
-  activeFilter: string;
+  secondaryCounts: Record<string, number>;
+  activePrimaryFilter: 'Upcoming' | 'Recent';
+  activeSecondaryFilter: string;
+}
+const props = defineProps<Props>();
+
+const emit = defineEmits(['primary-filter-changed', 'secondary-filter-changed']);
+
+type SecondaryFilterValue = 'All' | 'Today' | 'NextWeek' | 'NextMonth' | 'EarlierToday' | 'PastWeek' | 'PastMonth';
+
+const primaryFilters = [
+  { label: 'Upcoming Activities', value: 'Upcoming' as const },
+  { label: 'Recent Activities', value: 'Recent' as const },
+];
+
+const currentSecondaryFilters = computed(() => {
+  if (props.activePrimaryFilter === 'Upcoming') {
+    return [
+      { label: 'All', value: 'All' as SecondaryFilterValue },
+      { label: 'Today', value: 'Today' as SecondaryFilterValue },
+      { label: 'Next Week', value: 'NextWeek' as SecondaryFilterValue },
+      { label: 'Next Month', value: 'NextMonth' as SecondaryFilterValue },
+    ];
+  } else {
+    return [
+      { label: 'All', value: 'All' as SecondaryFilterValue },
+      { label: 'Earlier Today', value: 'EarlierToday' as SecondaryFilterValue },
+      { label: 'Past Week', value: 'PastWeek' as SecondaryFilterValue },
+      { label: 'Past Month', value: 'PastMonth' as SecondaryFilterValue },
+    ];
+  }
+});
+
+function selectPrimaryFilter(filterValue: 'Upcoming' | 'Recent') {
+  emit('primary-filter-changed', filterValue);
 }
 
-defineProps<Props>();
-const emit = defineEmits(['filter-changed']);
-type FilterValue = 'All' | 'Today' | 'NextWeek' | 'NextMonth';
-const filters = [
-  { label: 'All', value: 'All' as FilterValue }, { label: 'Today', value: 'Today' as FilterValue },
-  { label: 'Next Week', value: 'NextWeek' as FilterValue }, { label: 'Next Month', value: 'NextMonth' as FilterValue },
-];
-function selectFilter(filterValue: FilterValue) { emit('filter-changed', filterValue); }
+function selectSecondaryFilter(filterValue: SecondaryFilterValue) {
+  emit('secondary-filter-changed', filterValue);
+}
 </script>
 
 <template>
-  <div class="filter-tabs">
-    <button
-      v-for="filter in filters"
-      :key="filter.value"
-      :class="{ active: activeFilter === filter.value }"
-      @click="selectFilter(filter.value)"
-      class="filter-tab"
-    >
-      {{ filter.label }}
-      <span class="count">{{ counts[filter.value] }}</span>
-    </button>
+  <div class="combined-filters-container">
+    <div class="primary-filter-group">
+      <button
+        v-for="pFilter in primaryFilters"
+        :key="pFilter.value"
+        :class="{ active: activePrimaryFilter === pFilter.value }"
+        @click="selectPrimaryFilter(pFilter.value)"
+        class="primary-filter-button"
+      >
+        {{ pFilter.label }}
+      </button>
+    </div>
+
+    <div class="secondary-filter-tabs">
+      <button
+        v-for="sFilter in currentSecondaryFilters"
+        :key="sFilter.value"
+        :class="{ active: activeSecondaryFilter === sFilter.value }"
+        @click="selectSecondaryFilter(sFilter.value)"
+        class="filter-tab"
+      >
+        {{ sFilter.label }}
+        <span v-if="secondaryCounts[sFilter.value] !== undefined" class="count">
+          {{ secondaryCounts[sFilter.value] }}
+        </span>
+      </button>
+    </div>
   </div>
 </template>
+
 
 <style scoped>
 .filter-tabs {
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(15px);
   border-radius: 1rem;
@@ -44,7 +89,7 @@ function selectFilter(filterValue: FilterValue) { emit('filter-changed', filterV
 }
 
 .filter-tab {
-  padding: 0.75rem 1.25rem;
+  padding: 0.6rem 1rem;
   border: 2px solid rgba(79, 70, 229, 0.2);
   border-radius: 2rem;
   background: rgba(255, 255, 255, 0.8);
@@ -130,7 +175,7 @@ function selectFilter(filterValue: FilterValue) { emit('filter-changed', filterV
 @media (max-width: 767px) {
   .filter-tabs {
     gap: 0.4rem;
-    padding: 0.5rem; /* Keep padding as is for now */
+    padding: 0.5rem;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -158,13 +203,90 @@ function selectFilter(filterValue: FilterValue) { emit('filter-changed', filterV
   }
   .filter-tab {
     font-size: 0.9rem;
-    padding: 0.875rem 1.5rem;
+    padding: 0.6rem 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .filter-tabs {
     gap: 1rem;
+  }
+}
+
+
+.combined-filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.primary-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  align-self: flex-start;
+}
+
+.primary-filter-button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  border: 2px solid transparent;
+  background-color: transparent;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.primary-filter-button:hover {
+  background-color: rgba(79, 70, 229, 0.1);
+}
+
+.primary-filter-button.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+}
+
+.secondary-filter-tabs {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  overflow-x: auto;
+}
+
+
+@media (min-width: 768px) {
+  .combined-filters-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .primary-filter-group {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .secondary-filter-tabs {
+    padding: 0.5rem;
+    flex-grow: 1;
+    overflow-x: visible;
   }
 }
 </style>

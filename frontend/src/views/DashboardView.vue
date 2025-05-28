@@ -7,9 +7,67 @@ import { type SharedEventItem } from "../types/event";
 
 const eventStore = useEventStore();
 
-const activeFilter = ref("All");
+// Placeholder - replace with actual store logic for recent events
+const recentActivitiesPlaceholder = computed((): SharedEventItem[] => {
+  // Example: Filter events from a hypothetical allEvents list in the store
+  // or fetch specifically recent ones.
+  // For now, let's return a few past events for testing.
+  const now = new Date();
+  return [
+    // Add some sample past event data here if your store doesn't provide it yet
+    // { id: 'r1', title: 'Past Event 1', startDate: new Date(now.setDate(now.getDate() - 5)), type: 'Event' },
+    // { id: 'r2', title: 'Past Quiz', startDate: new Date(now.setDate(now.getDate() - 15)), type: 'Quiz' },
+  ];
+});
+
+const getEndOfDay = (date: Date): Date => {
+  const newDate = new Date(date);
+  newDate.setHours(23, 59, 59, 999);
+  return newDate;
+};
+
+const isPastDay = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  // Checks if the event was yesterday or earlier
+  return getStartOfDay(eventDate).getTime() < getStartOfDay(referenceDate).getTime();
+};
+
+const isEarlierToday = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  // Checks if the event was earlier today (but not future)
+  return getStartOfDay(eventDate).getTime() === getStartOfDay(referenceDate).getTime() &&
+         new Date(eventDate).getTime() < referenceDate.getTime();
+};
+
+const isPastWeek = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  const today = getStartOfDay(referenceDate);
+  const oneWeekAgo = new Date(today);
+  oneWeekAgo.setDate(today.getDate() - 7);
+  // Event should be on or after oneWeekAgo and before today
+  return getStartOfDay(eventDate).getTime() >= oneWeekAgo.getTime() &&
+         getStartOfDay(eventDate).getTime() < today.getTime();
+};
+
+const isPastMonth = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  const today = getStartOfDay(referenceDate);
+  const oneMonthAgo = new Date(today);
+  oneMonthAgo.setMonth(today.getMonth() - 1);
+  // Event should be on or after oneMonthAgo and before today
+  return getStartOfDay(eventDate).getTime() >= oneMonthAgo.getTime() &&
+         getStartOfDay(eventDate).getTime() < today.getTime();
+};
+
+const activeSecondaryFilter = ref<string>('All'); // Was activeFilter
 // Use a computed property to get events from the store.
-const activities = computed(() => eventStore.upcomingEvents);
+// const activities = computed(() => eventStore.upcomingEvents);
+const currentEventSource = computed((): SharedEventItem[] => {
+  if (activePrimaryFilter.value === 'Upcoming') {
+    return eventStore.upcomingEvents; // Assuming this gets future/today events
+  } else {
+    // Replace with your actual recent events source from the store
+    return recentActivitiesPlaceholder.value; // Or eventStore.recentEvents
+  }
+});
+const activePrimaryFilter = ref<'Upcoming' | 'Recent'>('Upcoming'); // Default to 'Upcoming'
+
 
 const getStartOfDay = (date: Date): Date => {
   const newDate = new Date(date);
@@ -65,59 +123,146 @@ const isNextMonth = (date: Date): boolean => {
 
 const filteredActivities = computed(() => {
   const now = new Date();
-  const currentActivities: SharedEventItem[] = activities.value;
+  const source = currentEventSource.value;
 
-  switch (activeFilter.value) {
-    case "Today":
-      return currentActivities.filter((activity) => isToday(activity.startDate));
-    case "NextWeek":
-      return currentActivities.filter((activity) => isNextWeek(activity.startDate));
-    case "NextMonth":
-      return currentActivities.filter((activity) => isNextMonth(activity.startDate));
-    case "All":
-    default:
-      return currentActivities.filter(
-        (activity) =>
-          activity.startDate.getTime() >= getStartOfDay(now).getTime(),
-      );
+  if (activePrimaryFilter.value === 'Upcoming') {
+    switch (activeSecondaryFilter.value) {
+      case 'Today':
+        return source.filter((activity) => isToday(activity.startDate));
+      case 'NextWeek':
+        return source.filter((activity) => isNextWeek(activity.startDate));
+      case 'NextMonth':
+        return source.filter((activity) => isNextMonth(activity.startDate));
+      case 'All':
+      default:
+        // Ensure "All" for upcoming still only shows future/today
+        return source.filter(
+          (activity) => activity.startDate.getTime() >= getStartOfDay(now).getTime()
+        );
+    }
+  } else { // 'Recent'
+    switch (activeSecondaryFilter.value) {
+      case 'EarlierToday': // New filter value for recent
+        return source.filter((activity) => isEarlierToday(activity.startDate, now) || (isToday(activity.startDate) && activity.startDate.getTime() < now.getTime()));
+      case 'PastWeek':   // New filter value for recent
+        return source.filter((activity) => isPastWeek(activity.startDate, now));
+      case 'PastMonth':  // New filter value for recent
+        return source.filter((activity) => isPastMonth(activity.startDate, now));
+      case 'All':
+      default:
+        // Ensure "All" for recent only shows past events
+        return source.filter(
+          (activity) => activity.startDate.getTime() < getStartOfDay(now).getTime() || isEarlierToday(activity.startDate, now)
+        );
+    }
   }
 });
 
-const filterCounts = computed(() => {
-  const now = new Date();
-  const upcomingActivitiesBase: SharedEventItem[] = activities.value.filter(
-    (activity) => activity.startDate.getTime() >= getStartOfDay(now).getTime(),
-  );
+// const filteredActivities = computed(() => {
+//   const now = new Date();
+//   const currentActivities: SharedEventItem[] = activities.value;
 
-  return {
-    All: upcomingActivitiesBase.length,
-    Today: upcomingActivitiesBase.filter((activity) => isToday(activity.startDate))
-      .length,
-    NextWeek: upcomingActivitiesBase.filter((activity) =>
-      isNextWeek(activity.startDate),
-    ).length,
-    NextMonth: upcomingActivitiesBase.filter((activity) =>
-      isNextMonth(activity.startDate),
-    ).length,
+//   switch (activeFilter.value) {
+//     case "Today":
+//       return currentActivities.filter((activity) => isToday(activity.startDate));
+//     case "NextWeek":
+//       return currentActivities.filter((activity) => isNextWeek(activity.startDate));
+//     case "NextMonth":
+//       return currentActivities.filter((activity) => isNextMonth(activity.startDate));
+//     case "All":
+//     default:
+//       return currentActivities.filter(
+//         (activity) =>
+//           activity.startDate.getTime() >= getStartOfDay(now).getTime(),
+//       );
+//   }
+// });
+
+// const filterCounts = computed(() => {
+//   const now = new Date();
+//   const upcomingActivitiesBase: SharedEventItem[] = activities.value.filter(
+//     (activity) => activity.startDate.getTime() >= getStartOfDay(now).getTime(),
+//   );
+
+//   return {
+//     All: upcomingActivitiesBase.length,
+//     Today: upcomingActivitiesBase.filter((activity) => isToday(activity.startDate))
+//       .length,
+//     NextWeek: upcomingActivitiesBase.filter((activity) =>
+//       isNextWeek(activity.startDate),
+//     ).length,
+//     NextMonth: upcomingActivitiesBase.filter((activity) =>
+//       isNextMonth(activity.startDate),
+//     ).length,
+//   };
+// });
+
+const secondaryFilterCounts = computed(() => {
+  const now = new Date();
+  const source = currentEventSource.value;
+
+  const defaultCounts = {
+    All: 0,
+    Today: 0,
+    NextWeek: 0,
+    NextMonth: 0,
+    EarlierToday: 0,
+    PastWeek: 0,
+    PastMonth: 0
   };
+
+  if (activePrimaryFilter.value === 'Upcoming') {
+    const upcomingSource = source.filter(
+      (activity) => activity.startDate.getTime() >= getStartOfDay(now).getTime()
+    );
+    return {
+      ...defaultCounts,
+      All: upcomingSource.length,
+      Today: upcomingSource.filter((activity) => isToday(activity.startDate)).length,
+      NextWeek: upcomingSource.filter((activity) => isNextWeek(activity.startDate)).length,
+      NextMonth: upcomingSource.filter((activity) => isNextMonth(activity.startDate)).length,
+    };
+  } else { // 'Recent'
+     const recentSource = source.filter(
+        (activity) => activity.startDate.getTime() < getStartOfDay(now).getTime() || isEarlierToday(activity.startDate, now)
+     );
+    return {
+      ...defaultCounts,
+      All: recentSource.length,
+      EarlierToday: recentSource.filter((activity) => isEarlierToday(activity.startDate, now) || (isToday(activity.startDate) && activity.startDate.getTime() < now.getTime())).length,
+      PastWeek: recentSource.filter((activity) => isPastWeek(activity.startDate, now)).length,
+      PastMonth: recentSource.filter((activity) => isPastMonth(activity.startDate, now)).length,
+    };
+  }
 });
 
-function handleFilterChange(newFilter: string) {
-  activeFilter.value = newFilter;
+// function handleFilterChange(newFilter: string) {
+//   activeFilter.value = newFilter;
+// }
+function handlePrimaryFilterChange(newFilter: 'Upcoming' | 'Recent') {
+  activePrimaryFilter.value = newFilter;
+  activeSecondaryFilter.value = 'All'; // Reset secondary filter to 'All'
+}
+
+function handleSecondaryFilterChange(newFilter: string) {
+  activeSecondaryFilter.value = newFilter;
 }
 </script>
 
 <template>
   <div class="dashboard-view">
-    <div class="header-section">
-      <h2 class="upcoming-activities-title">Upcoming Activities</h2>
-      <!-- <span class="online-indicator">● 1 online</span> -->
-    </div>
 
-    <EventFilterTabs
+    <!-- <EventFilterTabs
       :counts="filterCounts"
       :active-filter="activeFilter"
       @filter-changed="handleFilterChange"
+    /> -->
+    <EventFilterTabs
+      :active-primary-filter="activePrimaryFilter"
+      :active-secondary-filter="activeSecondaryFilter"
+      :secondary-counts="secondaryFilterCounts"
+      @primary-filter-changed="handlePrimaryFilterChange"
+      @secondary-filter-changed="handleSecondaryFilterChange"
     />
 
     <div class="activity-grid">
@@ -142,28 +287,7 @@ function handleFilterChange(newFilter: string) {
   position: relative;
 }
 
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  padding: 1.25rem;
-  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
 
-.upcoming-activities-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-}
 
 .online-indicator {
   font-size: 0.875rem;
@@ -197,13 +321,6 @@ function handleFilterChange(newFilter: string) {
   .dashboard-view {
     padding: 1.5rem;
   }
-  .header-section {
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
-  }
-  .upcoming-activities-title {
-    font-size: 1.75rem;
-  }
   .activity-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
@@ -213,9 +330,6 @@ function handleFilterChange(newFilter: string) {
 @media (min-width: 1024px) {
   .dashboard-view {
     padding: 2rem;
-  }
-  .upcoming-activities-title {
-    font-size: 2rem;
   }
   .activity-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -229,11 +343,6 @@ function handleFilterChange(newFilter: string) {
   }
 }
 
-@media (max-width: 767px) {
-  .upcoming-activities-title {
-    font-size: 1.1rem;
-  }
-}
 
 /* Mobile bottom navigation spacing */
 @media (max-width: 767px) {
