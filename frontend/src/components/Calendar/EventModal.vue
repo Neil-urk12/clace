@@ -14,6 +14,7 @@ import {
   MapPin,
   Image,
 } from "lucide-vue-next";
+import BaseButton from "@/components/Global/BaseButton.vue";
 import type { SharedEventItem } from "@/types/event";
 
 interface Props {
@@ -243,9 +244,9 @@ onMounted(() => {
     <div class="modal-container" @click.stop>
       <div class="modal-header">
         <h2 class="modal-title">{{ modalTitle }}</h2>
-        <button @click="handleClose" class="close-btn">
+        <BaseButton @click="handleClose" design="icon-only">
           <X :size="20" />
-        </button>
+        </BaseButton>
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-form">
@@ -459,23 +460,23 @@ onMounted(() => {
 
         <div class="form-actions">
           <div class="actions-left">
-            <button
+            <BaseButton
               v-if="!isCreating"
               type="button"
               @click="handleDelete"
-              class="delete-btn"
+              design="gradient-danger"
             >
               <Trash2 :size="16" />
               Delete
-            </button>
+            </BaseButton>
           </div>
           <div class="actions-right">
-            <button type="button" @click="handleClose" class="cancel-btn">
+            <BaseButton type="button" @click="handleClose" design="secondary">
               Cancel
-            </button>
-            <button type="submit" :disabled="!isValid" class="submit-btn">
+            </BaseButton>
+            <BaseButton type="submit" :disabled="!isValid" design="gradient-primary">
               {{ isCreating ? "Create Event" : "Update Event" }}
-            </button>
+            </BaseButton>
           </div>
         </div>
       </form>
@@ -579,50 +580,6 @@ onMounted(() => {
   background-clip: text;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.close-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0.1)
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #374151;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
-}
-
-.close-btn:hover::before {
-  opacity: 1;
 }
 
 .modal-form {
@@ -823,121 +780,13 @@ onMounted(() => {
   gap: 0.75rem;
 }
 
-.delete-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.delete-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.delete-btn:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
-}
-
-.delete-btn:hover::before {
-  left: 100%;
-}
-
-.cancel-btn {
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  color: #6b7280;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
-  color: #374151;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
-}
-
-.submit-btn {
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.submit-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(102, 126, 234, 0.6);
-}
-
-.submit-btn:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.submit-btn:disabled {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 2px 8px 0 rgba(156, 163, 175, 0.3);
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-container {
     margin: 0;
     border-radius: 16px 16px 0 0;
-    max-height: 100vh;
+    max-height: calc(100vh - 90px); /* Account for bottom navigation */
+    padding-bottom: 90px; /* Ensure content is not obscured by bottom nav */
     animation: slideUpMobile 0.24s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -958,7 +807,7 @@ onMounted(() => {
   }
 
   .modal-form {
-    padding: 0 1.5rem 1.5rem;
+    padding: 0 1.5rem calc(1.5rem + 90px); /* Add padding for bottom nav */
   }
 
   .datetime-grid {
@@ -994,6 +843,8 @@ onMounted(() => {
 
   .modal-container {
     border-radius: 12px 12px 0 0;
+    max-height: calc(100vh - 90px); /* Re-apply for smaller screens */
+    padding-bottom: 90px; /* Re-apply for smaller screens */
   }
 
   .modal-header {
@@ -1003,7 +854,7 @@ onMounted(() => {
   }
 
   .modal-form {
-    padding: 0 1.25rem 1.25rem;
+    padding: 0 1.25rem calc(1.25rem + 90px); /* Add padding for bottom nav */
   }
 
   .modal-title {
