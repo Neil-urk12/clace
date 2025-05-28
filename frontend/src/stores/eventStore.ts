@@ -2,8 +2,22 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { SharedEventItem } from '../types/event';
 
+/**
+ * @typedef {'Upcoming' | 'Recent'} PrimaryFilter
+ * @typedef {'All' | 'Today' | 'NextWeek' | 'NextMonth' | 'EarlierToday' | 'PastWeek' | 'PastMonth'} SecondaryFilter
+ */
+
+/**
+ * Pinia store for managing events.
+ *
+ * @returns {object} The event store with its state, getters, and actions.
+ */
 export const useEventStore = defineStore('eventStore', () => {
   
+  /**
+   * Reactive reference to an array of shared event items.
+   * @type {import('../types/event').SharedEventItem[]}
+   */
   const events = ref<SharedEventItem[]>([
     {
       id: 'sample-event-1',
@@ -71,28 +85,62 @@ export const useEventStore = defineStore('eventStore', () => {
     }
   ]);
 
+  /**
+   * Reactive reference for the active primary filter ('Upcoming' or 'Recent').
+   * @type {PrimaryFilter}
+   */
   const activePrimaryFilter = ref<'Upcoming' | 'Recent'>('Upcoming');
-  const activeSecondaryFilter = ref<string>('All'); 
-  const searchQuery = ref<string>(''); 
+  /**
+   * Reactive reference for the active secondary filter (e.g., 'All', 'Today', 'NextWeek').
+   * @type {SecondaryFilter}
+   */
+  const activeSecondaryFilter = ref<string>('All');
+  /**
+   * Reactive reference for the search query string.
+   * @type {string}
+   */
+  const searchQuery = ref<string>('');
 
   
+  /**
+   * Returns a new Date object set to the start of the day (00:00:00:000) for the given date.
+   * @param {Date} date - The date to get the start of the day for.
+   * @returns {Date} A new Date object representing the start of the day.
+   */
   const getStartOfDay = (date: Date): Date => {
     const newDate = new Date(date);
     newDate.setHours(0, 0, 0, 0);
     return newDate;
   };
 
+  /**
+   * Checks if the given date is today.
+   * @param {Date} date - The date to check.
+   * @returns {boolean} True if the date is today, false otherwise.
+   */
   const isToday = (date: Date): boolean => {
     const today = getStartOfDay(new Date());
     return getStartOfDay(date).getTime() === today.getTime();
   };
 
+  /**
+   * Checks if the event date is earlier than the reference date but on the same day.
+   * @param {Date} eventDate - The event date to check.
+   * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
+   * @returns {boolean} True if the event date is earlier today, false otherwise.
+   */
    const isEarlierToday = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
     
     return getStartOfDay(eventDate).getTime() === getStartOfDay(referenceDate).getTime() &&
            new Date(eventDate).getTime() < referenceDate.getTime();
   };
 
+  /**
+   * Checks if the given date falls within the next calendar week (Sunday to Saturday) relative to today.
+   * The "next week" starts on the first Sunday after the current week's Saturday.
+   * @param {Date} date - The date to check.
+   * @returns {boolean} True if the date is in the next week, false otherwise.
+   */
   const isNextWeek = (date: Date): boolean => {
     const today = getStartOfDay(new Date());
     const nextWeekStart = new Date(today);
@@ -111,6 +159,11 @@ export const useEventStore = defineStore('eventStore', () => {
     );
   };
 
+  /**
+   * Checks if the given date falls within the next calendar month.
+   * @param {Date} date - The date to check.
+   * @returns {boolean} True if the date is in the next month, false otherwise.
+   */
   const isNextMonth = (date: Date): boolean => {
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -134,6 +187,12 @@ export const useEventStore = defineStore('eventStore', () => {
     );
   };
 
+  /**
+   * Checks if the event date falls within the past week (7 days prior to reference date, excluding reference date).
+   * @param {Date} eventDate - The event date to check.
+   * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
+   * @returns {boolean} True if the event date is in the past week, false otherwise.
+   */
   const isPastWeek = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
     const today = getStartOfDay(referenceDate);
     const oneWeekAgo = new Date(today);
@@ -143,6 +202,12 @@ export const useEventStore = defineStore('eventStore', () => {
            getStartOfDay(eventDate).getTime() < today.getTime();
   };
 
+  /**
+   * Checks if the event date falls within the past month (relative to reference date, excluding reference date).
+   * @param {Date} eventDate - The event date to check.
+   * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
+   * @returns {boolean} True if the event date is in the past month, false otherwise.
+   */
   const isPastMonth = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
     const today = getStartOfDay(referenceDate);
     const oneMonthAgo = new Date(today);
@@ -154,14 +219,26 @@ export const useEventStore = defineStore('eventStore', () => {
 
 
   
+  /**
+   * Computed property that returns a function to find an event by its ID.
+   * @returns {(id: string) => import('../types/event').SharedEventItem | undefined} A function that takes an event ID and returns the matching event or undefined.
+   */
   const getEventById = computed(() => (id: string): SharedEventItem | undefined => {
     return events.value.find(event => event.id === id);
   });
 
+  /**
+   * Computed property that returns all events.
+   * @returns {import('../types/event').SharedEventItem[]} An array of all events.
+   */
   const allEvents = computed((): SharedEventItem[] => {
     return events.value;
   });
 
+  /**
+   * Computed property that returns events scheduled from today onwards, sorted by start date.
+   * @returns {import('../types/event').SharedEventItem[]} An array of upcoming events.
+   */
   const upcomingEvents = computed((): SharedEventItem[] => {
     const now = new Date();
     
@@ -170,6 +247,10 @@ export const useEventStore = defineStore('eventStore', () => {
       .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
   });
 
+  /**
+   * Computed property that returns events that have already started or are earlier today, sorted by start date in descending order.
+   * @returns {import('../types/event').SharedEventItem[]} An array of recent events.
+   */
    const recentEvents = computed((): SharedEventItem[] => {
     const now = new Date();
      
@@ -179,6 +260,11 @@ export const useEventStore = defineStore('eventStore', () => {
   });
 
 
+  /**
+   * Computed property that returns events filtered by primary filter (Upcoming/Recent),
+   * secondary filter (e.g., Today, NextWeek, PastMonth), and search query.
+   * @returns {import('../types/event').SharedEventItem[]} An array of filtered events.
+   */
   const filteredEvents = computed((): SharedEventItem[] => {
     const now = new Date();
     const source = activePrimaryFilter.value === 'Upcoming' ? upcomingEvents.value : recentEvents.value;
@@ -234,6 +320,10 @@ export const useEventStore = defineStore('eventStore', () => {
     }
   });
 
+  /**
+   * Computed property that calculates the counts for each secondary filter based on the active primary filter.
+   * @returns {object} An object containing counts for 'All', 'Today', 'NextWeek', 'NextMonth', 'EarlierToday', 'PastWeek', 'PastMonth'.
+   */
   const secondaryFilterCounts = computed(() => {
     const now = new Date();
     const upcomingSource = upcomingEvents.value;
@@ -269,6 +359,10 @@ export const useEventStore = defineStore('eventStore', () => {
   });
 
   
+  /**
+   * Adds a new event to the store. A unique ID is generated for the new event.
+   * @param {Omit<import('../types/event').SharedEventItem, 'id'>} eventData - The event data without an ID.
+   */
   function addEvent(eventData: Omit<SharedEventItem, 'id'>) {
     const newEvent: SharedEventItem = {
       ...eventData,
@@ -277,6 +371,10 @@ export const useEventStore = defineStore('eventStore', () => {
     events.value.push(newEvent);
   }
 
+  /**
+   * Updates an existing event in the store.
+   * @param {import('../types/event').SharedEventItem} updatedEvent - The updated event object.
+   */
   function updateEvent(updatedEvent: SharedEventItem) {
     const index = events.value.findIndex(event => event.id === updatedEvent.id);
     if (index !== -1) {
@@ -284,11 +382,20 @@ export const useEventStore = defineStore('eventStore', () => {
     }
   }
 
+  /**
+   * Deletes an event from the store by its ID.
+   * @param {string} eventId - The ID of the event to delete.
+   */
   function deleteEvent(eventId: string) {
     events.value = events.value.filter(event => event.id !== eventId);
   }
 
-  function loadEvents(sampleEvents?: SharedEventItem[]) { 
+  /**
+   * Loads events into the store. If `sampleEvents` are provided, they are used;
+   * otherwise, a default set of sample events is loaded.
+   * @param {import('../types/event').SharedEventItem[]} [sampleEvents] - Optional array of events to load.
+   */
+  function loadEvents(sampleEvents?: SharedEventItem[]) {
     if (sampleEvents) {
       events.value = sampleEvents;
     } else {
@@ -362,19 +469,35 @@ export const useEventStore = defineStore('eventStore', () => {
     }
   }
 
+  /**
+   * Replaces all current events in the store with a new array of events.
+   * @param {import('../types/event').SharedEventItem[]} newEvents - The new array of events to set.
+   */
   function setEvents(newEvents: SharedEventItem[]) {
     events.value = newEvents;
   }
 
-  function setSearchQuery(query: string) { 
+  /**
+   * Sets the search query string.
+   * @param {string} query - The search query.
+   */
+  function setSearchQuery(query: string) {
     searchQuery.value = query;
   }
 
+  /**
+   * Sets the active primary filter and resets the secondary filter to 'All'.
+   * @param {PrimaryFilter} filter - The primary filter to set ('Upcoming' or 'Recent').
+   */
   function setActivePrimaryFilter(filter: 'Upcoming' | 'Recent') {
     activePrimaryFilter.value = filter;
     activeSecondaryFilter.value = 'All'; 
   }
 
+  /**
+   * Sets the active secondary filter.
+   * @param {SecondaryFilter} filter - The secondary filter to set (e.g., 'All', 'Today', 'NextWeek').
+   */
   function setActiveSecondaryFilter(filter: string) {
     activeSecondaryFilter.value = filter;
   }
