@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useEventStore } from "@/stores/eventStore";
 
-const searchQuery = ref("");
-
-const emit = defineEmits(["search"]);
-
-const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    emit("search", searchQuery.value);
-  }
-};
+const eventStore = useEventStore();
+const searchQuery = ref(eventStore.searchQuery);
 </script>
 
 <template>
@@ -32,7 +26,7 @@ const handleSearch = () => {
         type="text"
         placeholder="Search events by keyword..."
         class="search-input"
-        @keyup.enter="handleSearch"
+        @input="eventStore.setSearchQuery(searchQuery)"
       />
     </div>
   </div>
@@ -93,7 +87,7 @@ const handleSearch = () => {
   font-weight: 400;
 }
 
-/* Large screens - more compact for header */
+
 @media (min-width: 1024px) {
   .search-input {
     max-width: 500px;
@@ -109,7 +103,7 @@ const handleSearch = () => {
   }
 }
 
-/* Mobile Responsive */
+
 @media (max-width: 768px) {
   .search-input {
     font-size: 0.875rem;
