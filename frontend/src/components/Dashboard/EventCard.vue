@@ -23,12 +23,18 @@ const formatDate = (date: Date): string => {
 <template>
   <div class="event-card" :class="activity.type?.toLowerCase()">
     <div class="card-image-container">
-      <img v-if="activity.imageUrl" :src="activity.imageUrl" :alt="activity.title" class="activity-image" />
+      <img
+        v-if="activity.imageUrl"
+        :src="activity.imageUrl"
+        :alt="activity.title"
+        class="activity-image"
+      />
       <div v-else class="activity-image-placeholder">
         <span>{{ activity.type }}</span>
       </div>
-      <!-- Date badge removed as per SharedEventItem structure -->
-      <div v-if="activity.type" class="image-overlay-type">{{ activity.type }}</div>
+      <div v-if="activity.type" class="image-overlay-type">
+        {{ activity.type }}
+      </div>
     </div>
     <div class="card-content">
       <div class="title-status-row">
@@ -37,25 +43,35 @@ const formatDate = (date: Date): string => {
           v-if="getStatusIcon(activity.status)"
           :is="getStatusIcon(activity.status)"
           class="status-icon"
-          :class="{ 'status-icon-completed': activity.status === 'Completed' || activity.status === 'Graded' || activity.status === 'Submitted'}"
+          :class="{
+            'status-icon-completed':
+              activity.status === 'Completed' ||
+              activity.status === 'Graded' ||
+              activity.status === 'Submitted',
+          }"
           :size="20"
         />
       </div>
-      <p v-if="activity.description" class="activity-details-text">{{ activity.description }}</p>
+      <p v-if="activity.description" class="activity-details-text">
+        {{ activity.description }}
+      </p>
 
       <div class="activity-info">
-        <!-- Time removed as per SharedEventItem structure -->
         <div v-if="activity.location" class="detail-item">
-          <MapPinIcon :size="16" class="detail-icon" /> <span>{{ activity.location }}</span>
+          <MapPinIcon :size="16" class="detail-icon" />
+          <span>{{ activity.location }}</span>
         </div>
         <div v-if="activity.subject" class="detail-item">
-          <BookIcon :size="16" class="detail-icon" /> <span>{{ activity.subject }}</span>
+          <BookIcon :size="16" class="detail-icon" />
+          <span>{{ activity.subject }}</span>
         </div>
-         <div v-else-if="activity.course" class="detail-item">
-          <BookIcon :size="16" class="detail-icon" /> <span>{{ activity.course }}</span>
+        <div v-else-if="activity.course" class="detail-item">
+          <BookIcon :size="16" class="detail-icon" />
+          <span>{{ activity.course }}</span>
         </div>
         <div v-if="activity.startDate" class="detail-item">
-           <ClockIcon :size="16" class="detail-icon" /> <span>{{ formatDate(activity.startDate) }}</span>
+          <ClockIcon :size="16" class="detail-icon" />
+          <span>{{ formatDate(activity.startDate) }}</span>
         </div>
       </div>
     </div>
@@ -63,121 +79,193 @@ const formatDate = (date: Date): string => {
 </template>
 
 <style scoped>
-.event-card { /* Changed from .activity-card */
-  background-color: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.event-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
 }
 
-.event-card:hover { /* Changed from .activity-card:hover */
-  transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+.event-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #a855f7);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.event-card:hover::before {
+  opacity: 1;
 }
 
 .card-image-container {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  background-color: #e5e7eb;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  overflow: hidden;
 }
 
-.activity-image, .activity-image-placeholder {
+.activity-image,
+.activity-image-placeholder {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
+
+.event-card:hover .activity-image {
+  transform: scale(1.05);
+}
+
 .activity-image-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f4f6;
-  color: #6b7280;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-
-/* Date badge styles removed as per template update */
 
 .image-overlay-type {
   position: absolute;
   color: white;
-  background-color: rgba(0,0,0,0.6);
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.3rem;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.9), rgba(124, 58, 237, 0.9));
+  backdrop-filter: blur(10px);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   z-index: 1;
   bottom: 0.75rem;
   right: 0.75rem;
   text-transform: capitalize;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-content {
-  padding: 1rem;
+  padding: 1.25rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 .title-status-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.activity-title { /* Kept activity-title class */
+.activity-title {
   font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #1f2937;
   margin-right: 0.5rem;
   flex-grow: 1;
   line-height: 1.3;
+  background: linear-gradient(135deg, #1f2937, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .status-icon {
   flex-shrink: 0;
   margin-top: 2px;
+  color: #6b7280;
+  transition: color 0.2s ease;
 }
+
 .status-icon-completed {
   color: #10b981;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
 }
 
-
-.activity-details-text { /* Kept activity-details-text class */
-  font-size: 0.875rem;
-  color: #4b5563;
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
-}
-
-.activity-info { /* Kept activity-info class */
-  margin-top: auto;
-  padding-top: 0.75rem;
+.activity-details-text {
   font-size: 0.875rem;
   color: #6b7280;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.activity-info {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
 }
 
 .detail-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease;
+}
+
+.detail-item:hover {
+  color: #4f46e5;
 }
 
 .detail-item span {
   line-height: 1.3;
+  font-weight: 500;
 }
 
 .detail-icon {
-  color: #9ca3af;
+  color: #4f46e5;
   flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.detail-item:hover .detail-icon {
+  opacity: 1;
+}
+
+/* Card type variations */
+.event-card.assignment {
+  border-left: 4px solid #f59e0b;
+}
+
+.event-card.exam {
+  border-left: 4px solid #ef4444;
+}
+
+.event-card.lecture {
+  border-left: 4px solid #3b82f6;
+}
+
+.event-card.event {
+  border-left: 4px solid #10b981;
 }
 </style>

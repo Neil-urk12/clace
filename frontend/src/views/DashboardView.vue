@@ -111,7 +111,7 @@ function handleFilterChange(newFilter: string) {
   <div class="dashboard-view">
     <div class="header-section">
       <h2 class="upcoming-activities-title">Upcoming Activities</h2>
-      <span class="online-indicator">● 1 online</span>
+      <!-- <span class="online-indicator">● 1 online</span> -->
     </div>
 
     <EventFilterTabs
@@ -139,6 +139,7 @@ function handleFilterChange(newFilter: string) {
   max-width: 1300px;
   margin: 0 auto;
   box-sizing: border-box;
+  position: relative;
 }
 
 .header-section {
@@ -146,17 +147,32 @@ function handleFilterChange(newFilter: string) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .upcoming-activities-title {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
 }
 
 .online-indicator {
   font-size: 0.875rem;
   color: #10b981;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.375rem 0.75rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .activity-grid {
@@ -167,9 +183,14 @@ function handleFilterChange(newFilter: string) {
 
 .no-activities-message {
   text-align: center;
-  color: #6b7280;
-  padding: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 3rem 2rem;
   font-style: italic;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
 }
 
 @media (min-width: 768px) {
@@ -178,6 +199,7 @@ function handleFilterChange(newFilter: string) {
   }
   .header-section {
     margin-bottom: 1.5rem;
+    padding: 1.5rem;
   }
   .upcoming-activities-title {
     font-size: 1.75rem;
@@ -204,6 +226,12 @@ function handleFilterChange(newFilter: string) {
 @media (min-width: 1400px) {
   .activity-grid {
     gap: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .upcoming-activities-title {
+    font-size: 1.1rem;
   }
 }
 
