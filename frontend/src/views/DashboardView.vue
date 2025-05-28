@@ -206,4 +206,11 @@ function handleFilterChange(newFilter: string) {
     gap: 2rem;
   }
 }
+
+/* Mobile bottom navigation spacing */
+@media (max-width: 767px) {
+  .dashboard-view {
+    padding-bottom: 100px;
+  }
+}
 </style>

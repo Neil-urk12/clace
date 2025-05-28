@@ -4,6 +4,9 @@ import { useRoute } from "vue-router";
 const AppHeader = defineAsyncComponent(
   () => import("../components/Global/AppHeader.vue"),
 );
+const BottomNavigation = defineAsyncComponent(
+  () => import("../components/Global/BottomNavigation.vue"),
+);
 
 const isMobile = ref(false);
 
@@ -21,10 +24,16 @@ onUnmounted(() => {
 });
 
 const hiddenRoutes: string[] = ["/auth", "/", "/calendar"];
+const mobileOnlyRoutes: string[] = ["/dashboard", "/calendar", "/profile"];
 
 function isHiddenRoute(): boolean {
   const route = useRoute().path;
   return hiddenRoutes.includes(route);
+}
+
+function shouldShowBottomNav(): boolean {
+  const route = useRoute().path;
+  return mobileOnlyRoutes.includes(route);
 }
 </script>
 
@@ -33,9 +42,10 @@ function isHiddenRoute(): boolean {
     <header>
       <AppHeader v-if="!isHiddenRoute()" />
     </header>
-    <main>
+    <main :class="{ 'with-bottom-nav': shouldShowBottomNav() && isMobile }">
       <RouterView />
     </main>
+    <BottomNavigation v-if="shouldShowBottomNav() && isMobile" />
   </div>
 </template>
 
@@ -63,6 +73,17 @@ header {
 main {
   width: 100%;
   flex: 1;
+}
+
+main.with-bottom-nav {
+  padding-bottom: 80px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  main.with-bottom-nav {
+    padding-bottom: 90px;
+  }
 }
 
 /* Mobile first approach - base styles are for mobile */

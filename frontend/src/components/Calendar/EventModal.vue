@@ -1,143 +1,161 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { X, Calendar, Clock, Type, FileText, Palette, Trash2, Tag, BookOpen, CheckSquare, MapPin, Image } from 'lucide-vue-next' // Added new icons
-import type { SharedEventItem } from '@/types/event' // Updated import
+import { ref, computed, watch, onMounted } from "vue";
+import {
+  X,
+  Calendar,
+  Clock,
+  Type,
+  FileText,
+  Palette,
+  Trash2,
+  Tag,
+  BookOpen,
+  CheckSquare,
+  MapPin,
+  Image,
+} from "lucide-vue-next";
+import type { SharedEventItem } from "@/types/event";
 
 interface Props {
-  show: boolean
-  event?: SharedEventItem | null // Updated prop type
-  isCreating: boolean
-  selectedDate?: Date | null
+  show: boolean;
+  event?: SharedEventItem | null;
+  isCreating: boolean;
+  selectedDate?: Date | null;
 }
 
 interface Emits {
-  (e: 'create', eventData: Omit<SharedEventItem, 'id'>): void // Updated emit type
-  (e: 'update', eventData: Partial<SharedEventItem>): void // Updated emit type
-  (e: 'delete', eventId: string): void
-  (e: 'close'): void
+  (e: "create", eventData: Omit<SharedEventItem, "id">): void;
+  (e: "update", eventData: Partial<SharedEventItem>): void;
+  (e: "delete", eventId: string): void;
+  (e: "close"): void;
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
-// Form data
 const formData = ref({
-  title: '',
-  description: '',
-  startDate: '',
-  startTime: '',
-  endDate: '',
-  endTime: '',
-  color: '#3b82f6',
+  title: "",
+  description: "",
+  startDate: "",
+  startTime: "",
+  endDate: "",
+  endTime: "",
+  color: "#3b82f6",
   allDay: false,
-  // New fields for SharedEventItem
-  type: 'GeneralActivity' as SharedEventItem['type'],
-  subject: '',
-  course: '',
-  status: 'Scheduled' as SharedEventItem['status'],
-  location: '',
-  imageUrl: ''
-})
+  type: "GeneralActivity" as SharedEventItem["type"],
+  subject: "",
+  course: "",
+  status: "Scheduled" as SharedEventItem["status"],
+  location: "",
+  imageUrl: "",
+});
 
-// Color options
 const colorOptions = [
-  '#3b82f6', // Blue
-  '#ef4444', // Red
-  '#10b981', // Green
-  '#f59e0b', // Yellow
-  '#8b5cf6', // Purple
-  '#06b6d4', // Cyan
-  '#f97316', // Orange
-  '#84cc16', // Lime
-  '#ec4899', // Pink
-  '#6b7280'  // Gray
-]
+  "#3b82f6",
+  "#ef4444",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#06b6d4",
+  "#f97316",
+  "#84cc16",
+  "#ec4899",
+  "#6b7280",
+];
 
-// Form validation
 const isValid = computed(() => {
-  return formData.value.title.trim() !== '' &&
-         formData.value.startDate !== '' &&
-         (formData.value.allDay || formData.value.startTime !== '') &&
-         formData.value.endDate !== '' &&
-         (formData.value.allDay || formData.value.endTime !== '')
-})
+  return (
+    formData.value.title.trim() !== "" &&
+    formData.value.startDate !== "" &&
+    (formData.value.allDay || formData.value.startTime !== "") &&
+    formData.value.endDate !== "" &&
+    (formData.value.allDay || formData.value.endTime !== "")
+  );
+});
 
 const modalTitle = computed(() => {
-  if (props.isCreating) return 'Create New Event'
-  return 'Edit Event'
-})
+  if (props.isCreating) return "Create New Event";
+  return "Edit Event";
+});
 
-// Initialize form data
 const initializeForm = () => {
   if (props.event && !props.isCreating) {
-    // Edit mode
     formData.value = {
       title: props.event.title,
-      description: props.event.description || '',
+      description: props.event.description || "",
       startDate: formatDateForInput(new Date(props.event.startDate)),
       startTime: formatTimeForInput(new Date(props.event.startDate)),
-      endDate: props.event.endDate ? formatDateForInput(new Date(props.event.endDate)) : '',
-      endTime: props.event.endDate ? formatTimeForInput(new Date(props.event.endDate)) : '',
-      color: props.event.color || '#3b82f6',
+      endDate: props.event.endDate
+        ? formatDateForInput(new Date(props.event.endDate))
+        : "",
+      endTime: props.event.endDate
+        ? formatTimeForInput(new Date(props.event.endDate))
+        : "",
+      color: props.event.color || "#3b82f6",
       allDay: props.event.allDay || false,
-      type: props.event.type || 'GeneralActivity',
-      subject: props.event.subject || '',
-      course: props.event.course || '',
-      status: props.event.status || 'Scheduled',
-      location: props.event.location || '',
-      imageUrl: props.event.imageUrl || ''
-    }
+      type: props.event.type || "GeneralActivity",
+      subject: props.event.subject || "",
+      course: props.event.course || "",
+      status: props.event.status || "Scheduled",
+      location: props.event.location || "",
+      imageUrl: props.event.imageUrl || "",
+    };
   } else {
-    // Create mode
-    const now = new Date()
-    const defaultDate = props.selectedDate || now
-    const startTime = new Date(defaultDate)
-    startTime.setMinutes(0, 0, 0) // Round to nearest hour
-    
-    const endTime = new Date(startTime)
-    endTime.setHours(endTime.getHours() + 1)
+    const now = new Date();
+    const defaultDate = props.selectedDate || now;
+    const startTime = new Date(defaultDate);
+    startTime.setMinutes(0, 0, 0);
+
+    const endTime = new Date(startTime);
+    endTime.setHours(endTime.getHours() + 1);
 
     formData.value = {
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       startDate: formatDateForInput(defaultDate),
       startTime: formatTimeForInput(startTime),
       endDate: formatDateForInput(defaultDate),
       endTime: formatTimeForInput(endTime),
-      color: '#3b82f6',
+      color: "#3b82f6",
       allDay: false,
-      type: 'GeneralActivity',
-      subject: '',
-      course: '',
-      status: 'Scheduled',
-      location: '',
-      imageUrl: ''
-    }
+      type: "GeneralActivity",
+      subject: "",
+      course: "",
+      status: "Scheduled",
+      location: "",
+      imageUrl: "",
+    };
   }
-}
+};
 
 const formatDateForInput = (date: Date): string => {
-  return date.toISOString().split('T')[0]
-}
+  return date.toISOString().split("T")[0];
+};
 
 const formatTimeForInput = (date: Date): string => {
-  return date.toTimeString().slice(0, 5)
-}
+  return date.toTimeString().slice(0, 5);
+};
 
 const parseDateTime = (dateStr: string, timeStr: string): Date => {
   if (!timeStr) {
-    return new Date(dateStr + 'T00:00:00')
+    return new Date(dateStr + "T00:00:00");
   }
-  return new Date(dateStr + 'T' + timeStr + ':00')
-}
+  return new Date(dateStr + "T" + timeStr + ":00");
+};
 
 const handleSubmit = () => {
-  if (!isValid.value) return
+  if (!isValid.value) return;
 
-  const startDateTime = parseDateTime(formData.value.startDate, formData.value.startTime)
-  const endDateTime = parseDateTime(formData.value.endDate, formData.value.endTime)
+  const startDateTime = parseDateTime(
+    formData.value.startDate,
+    formData.value.startTime,
+  );
+  const endDateTime = parseDateTime(
+    formData.value.endDate,
+    formData.value.endTime,
+  );
 
-  const eventDataPayload: Omit<SharedEventItem, 'id'> = {
+  const eventDataPayload: Omit<SharedEventItem, "id"> = {
     title: formData.value.title.trim(),
     description: formData.value.description.trim(),
     startDate: startDateTime,
@@ -150,70 +168,78 @@ const handleSubmit = () => {
     status: formData.value.status,
     location: formData.value.location?.trim() || undefined,
     imageUrl: formData.value.imageUrl?.trim() || undefined,
-  }
+  };
 
   if (props.isCreating) {
-    emit('create', eventDataPayload)
+    emit("create", eventDataPayload);
   } else if (props.event?.id) {
-    emit('update', { ...eventDataPayload, id: props.event.id })
+    emit("update", { ...eventDataPayload, id: props.event.id });
   }
-}
+};
 
 const handleDelete = () => {
   if (props.event && !props.isCreating) {
-    if (confirm('Are you sure you want to delete this event?')) {
-      emit('delete', props.event.id)
+    if (confirm("Are you sure you want to delete this event?")) {
+      emit("delete", props.event.id);
     }
   }
-}
+};
 
 const handleClose = () => {
-  emit('close')
-}
+  emit("close");
+};
 
 const handleAllDayChange = () => {
   if (formData.value.allDay) {
     // Set times to full day
-    formData.value.startTime = '00:00'
-    formData.value.endTime = '23:59'
+    formData.value.startTime = "00:00";
+    formData.value.endTime = "23:59";
   }
-}
+};
 
-// Watch for prop changes
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    initializeForm()
-  }
-})
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      initializeForm();
+    }
+  },
+);
 
-// Focus title input when modal opens
-const titleInput = ref<HTMLInputElement>()
+const titleInput = ref<HTMLInputElement>();
 
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    setTimeout(() => {
-      titleInput.value?.focus()
-    }, 100)
-  }
-})
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      setTimeout(() => {
+        titleInput.value?.focus();
+      }, 100);
+    }
+  },
+);
 
-// Keyboard shortcuts
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') {
-    handleClose()
-  } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    event.preventDefault()
-    handleSubmit()
+  if (event.key === "Escape") {
+    handleClose();
+  } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    handleSubmit();
   }
-}
+};
 
 onMounted(() => {
-  initializeForm()
-})
+  initializeForm();
+});
 </script>
 
 <template>
-  <div v-if="show" class="modal-overlay" @click="handleClose" @keydown="handleKeydown">
+  <div
+    v-if="show"
+    class="modal-overlay"
+    @click="handleClose"
+    @keydown="handleKeydown"
+  >
     <div class="modal-container" @click.stop>
       <div class="modal-header">
         <h2 class="modal-title">{{ modalTitle }}</h2>
@@ -223,7 +249,6 @@ onMounted(() => {
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-form">
-        <!-- Title -->
         <div class="form-group">
           <label for="title" class="form-label">
             <Type :size="16" />
@@ -240,7 +265,6 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Description -->
         <div class="form-group">
           <label for="description" class="form-label">
             <FileText :size="16" />
@@ -255,7 +279,6 @@ onMounted(() => {
           ></textarea>
         </div>
 
-        <!-- Activity Type -->
         <div class="form-group">
           <label for="activityType" class="form-label">
             <Tag :size="16" />
@@ -272,7 +295,6 @@ onMounted(() => {
           </select>
         </div>
 
-        <!-- Subject -->
         <div class="form-group">
           <label for="subject" class="form-label">
             <BookOpen :size="16" />
@@ -283,14 +305,13 @@ onMounted(() => {
             v-model="formData.subject"
             type="text"
             class="form-input"
-            placeholder="e.g., Mathematics, History (optional)"
+            placeholder="e.g., Mathematics, History"
           />
         </div>
 
-        <!-- Course -->
         <div class="form-group">
           <label for="course" class="form-label">
-            <BookOpen :size="16" /> <!-- Consider a different icon if available, or reuse -->
+            <BookOpen :size="16" />
             Course
           </label>
           <input
@@ -298,11 +319,10 @@ onMounted(() => {
             v-model="formData.course"
             type="text"
             class="form-input"
-            placeholder="e.g., MATH101, HIST202 (optional)"
+            placeholder="e.g., MATH101, HIST202"
           />
         </div>
-        
-        <!-- Status -->
+
         <div class="form-group">
           <label for="status" class="form-label">
             <CheckSquare :size="16" />
@@ -319,7 +339,6 @@ onMounted(() => {
           </select>
         </div>
 
-        <!-- Location -->
         <div class="form-group">
           <label for="location" class="form-label">
             <MapPin :size="16" />
@@ -330,11 +349,10 @@ onMounted(() => {
             v-model="formData.location"
             type="text"
             class="form-input"
-            placeholder="e.g., Room 101, Online (optional)"
+            placeholder="e.g., Room 101, Online"
           />
         </div>
 
-        <!-- Image URL -->
         <div class="form-group">
           <label for="imageUrl" class="form-label">
             <Image :size="16" />
@@ -345,11 +363,10 @@ onMounted(() => {
             v-model="formData.imageUrl"
             type="url"
             class="form-input"
-            placeholder="https://example.com/image.png (optional)"
+            placeholder="https://example.com/image.png"
           />
         </div>
 
-        <!-- All Day Toggle -->
         <div class="form-group">
           <label class="checkbox-label">
             <input
@@ -363,9 +380,7 @@ onMounted(() => {
           </label>
         </div>
 
-        <!-- Date and Time -->
         <div class="datetime-grid">
-          <!-- Start Date/Time -->
           <div class="form-group">
             <label for="startDate" class="form-label">
               <Calendar :size="16" />
@@ -394,7 +409,6 @@ onMounted(() => {
             />
           </div>
 
-          <!-- End Date/Time -->
           <div class="form-group">
             <label for="endDate" class="form-label">
               <Calendar :size="16" />
@@ -424,7 +438,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Color Selection -->
         <div class="form-group">
           <label class="form-label">
             <Palette :size="16" />
@@ -444,7 +457,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Form Actions -->
         <div class="form-actions">
           <div class="actions-left">
             <button
@@ -461,12 +473,8 @@ onMounted(() => {
             <button type="button" @click="handleClose" class="cancel-btn">
               Cancel
             </button>
-            <button
-              type="submit"
-              :disabled="!isValid"
-              class="submit-btn"
-            >
-              {{ isCreating ? 'Create Event' : 'Update Event' }}
+            <button type="submit" :disabled="!isValid" class="submit-btn">
+              {{ isCreating ? "Create Event" : "Update Event" }}
             </button>
           </div>
         </div>
@@ -482,7 +490,11 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -490,7 +502,7 @@ onMounted(() => {
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.23s ease-out;
 }
 
 @keyframes fadeIn {
@@ -508,20 +520,21 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 
-              0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(10px) scale(0.5);
   }
   to {
     opacity: 1;
@@ -530,13 +543,17 @@ onMounted(() => {
 }
 
 .modal-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
   border-radius: inherit;
   pointer-events: none;
 }
@@ -582,13 +599,17 @@ onMounted(() => {
 }
 
 .close-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1)
+  );
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -644,8 +665,9 @@ onMounted(() => {
   outline: none;
   background: rgba(255, 255, 255, 0.95);
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2), 
-              0 4px 15px 0 rgba(102, 126, 234, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(102, 126, 234, 0.2),
+    0 4px 15px 0 rgba(102, 126, 234, 0.1);
   transform: translateY(-1px);
 }
 
@@ -704,7 +726,7 @@ onMounted(() => {
 }
 
 .checkbox-input:checked + .checkbox-custom::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -743,13 +765,17 @@ onMounted(() => {
 }
 
 .color-option::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -766,9 +792,10 @@ onMounted(() => {
 
 .color-option.selected {
   border-color: #4c1d95;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 
-              0 0 0 5px #4c1d95,
-              0 8px 25px 0 rgba(76, 29, 149, 0.3);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.8),
+    0 0 0 5px #4c1d95,
+    0 8px 25px 0 rgba(76, 29, 149, 0.3);
   transform: translateY(-3px) scale(1.15);
 }
 
@@ -814,13 +841,18 @@ onMounted(() => {
 }
 
 .delete-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -868,13 +900,18 @@ onMounted(() => {
 }
 
 .submit-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -901,7 +938,7 @@ onMounted(() => {
     margin: 0;
     border-radius: 16px 16px 0 0;
     max-height: 100vh;
-    animation: slideUpMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUpMobile 0.24s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes slideUpMobile {
