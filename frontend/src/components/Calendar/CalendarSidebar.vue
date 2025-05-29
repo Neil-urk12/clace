@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, defineAsyncComponent } from "vue";
 import { X } from "lucide-vue-next";
-import MiniCalendar from "./MiniCalendar.vue";
 import { useEventStore } from "../../stores/eventStore";
 import type { SharedEventItem } from "../../types/event";
+
+const MiniCalendar = defineAsyncComponent(() => import("./MiniCalendar.vue"));
 
 interface Props {
   isOpen: boolean;
