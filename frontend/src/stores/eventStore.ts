@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { SharedEventItem } from '../types/event';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type { SharedEventItem } from "../types/event";
 
 /**
  * @typedef {'Upcoming' | 'Recent'} PrimaryFilter
@@ -12,96 +12,172 @@ import type { SharedEventItem } from '../types/event';
  *
  * @returns {object} The event store with its state, getters, and actions.
  */
-export const useEventStore = defineStore('eventStore', () => {
-  
+export const useEventStore = defineStore("eventStore", () => {
   /**
    * Reactive reference to an array of shared event items.
    * @type {import('../types/event').SharedEventItem[]}
    */
   const events = ref<SharedEventItem[]>([
     {
-      id: 'sample-event-1',
-      title: 'Team Sync Meeting',
-      description: 'Weekly team synchronization meeting.',
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1, 10, 0), 
-      endDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1, 11, 0),   
+      id: "sample-event-1",
+      title: "Team Sync Meeting",
+      description: "Weekly team synchronization meeting.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 1,
+        10,
+        0,
+      ),
+      endDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 1,
+        11,
+        0,
+      ),
       allDay: false,
-      type: 'ClassSession',
-      subject: 'Project Alpha',
-      course: 'CS500',
-      status: 'Scheduled',
-      location: 'Online Conference Room',
-      color: '#3b82f6' 
+      type: "ClassSession",
+      subject: "Project Alpha",
+      course: "CS500",
+      status: "Scheduled",
+      location: "Online Conference Room",
+      color: "#3b82f6",
     },
     {
-      id: 'sample-event-2',
-      title: 'Project Deadline',
-      description: 'Final submission for Project Beta.',
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 3, 23, 59), 
+      id: "sample-event-2",
+      title: "Project Deadline",
+      description: "Final submission for Project Beta.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 3,
+        23,
+        59,
+      ),
       allDay: true,
-      type: 'Project',
-      subject: 'Project Beta',
-      course: 'CS501',
-      status: 'Pending',
-      color: '#ef4444' 
+      type: "Project",
+      subject: "Project Beta",
+      course: "CS501",
+      status: "Pending",
+      color: "#ef4444",
     },
     {
-      id: 'sample-event-3',
-      title: 'Quiz 2',
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 7, 14, 0), 
+      id: "sample-event-3",
+      title: "Quiz 2",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 7,
+        14,
+        0,
+      ),
       allDay: false,
-      type: 'Quiz',
-      subject: 'Data Structures',
-      course: 'CS201',
-      status: 'Scheduled',
-      location: 'Room 101',
-      color: '#f97316' 
+      type: "Quiz",
+      subject: "Data Structures",
+      course: "CS201",
+      status: "Scheduled",
+      location: "Room 101",
+      color: "#f97316",
     },
     {
-      id: 'sample-event-4',
-      title: 'Past Project Meeting',
-      description: 'Discussed initial phase of Project Gamma.',
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2, 14, 0), 
-      endDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2, 15, 0),   
-      allDay: false,
-      type: 'ClassSession',
-      subject: 'Project Gamma',
-      course: 'CS600',
-      status: 'Completed',
-      location: 'Online Conference Room',
-      color: '#a855f7' 
-    },
-     {
-      id: 'sample-event-5',
-      title: 'Past Assignment Due',
-      description: 'Submission for Assignment 1.',
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 10, 23, 59), 
+      id: "sample-event-7",
+      title: "Project Deadline gyat",
+      description: "Final submission for Project Beta.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 3,
+        23,
+        59,
+      ),
       allDay: true,
-      type: 'Assignment',
-      subject: 'Data Structures',
-      course: 'CS201',
-      status: 'Completed',
-      color: '#22c55e' 
-    }
+      type: "Project",
+      subject: "Project Gyat",
+      course: "CS5012",
+      status: "Pending",
+      color: "#ef4444",
+    },
+    {
+      id: "sample-event-21",
+      title: "Project Deadline",
+      description: "Final submission for Project Beta.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 3,
+        23,
+        59,
+      ),
+      allDay: true,
+      type: "Project",
+      subject: "Project Sigma",
+      course: "CS501",
+      status: "Pending",
+      color: "#ef4444",
+    },
+    {
+      id: "sample-event-4",
+      title: "Past Project Meeting",
+      description: "Discussed initial phase of Project Gamma.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() - 2,
+        14,
+        0,
+      ),
+      endDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() - 2,
+        15,
+        0,
+      ),
+      allDay: false,
+      type: "ClassSession",
+      subject: "Project Gamma",
+      course: "CS600",
+      status: "Completed",
+      location: "Online Conference Room",
+      color: "#a855f7",
+    },
+    {
+      id: "sample-event-5",
+      title: "Past Assignment Due",
+      description: "Submission for Assignment 1.",
+      startDate: new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() - 10,
+        23,
+        59,
+      ),
+      allDay: true,
+      type: "Assignment",
+      subject: "Data Structures",
+      course: "CS201",
+      status: "Completed",
+      color: "#22c55e",
+    },
   ]);
 
   /**
    * Reactive reference for the active primary filter ('Upcoming' or 'Recent').
    * @type {PrimaryFilter}
    */
-  const activePrimaryFilter = ref<'Upcoming' | 'Recent'>('Upcoming');
+  const activePrimaryFilter = ref<"Upcoming" | "Recent">("Upcoming");
   /**
    * Reactive reference for the active secondary filter (e.g., 'All', 'Today', 'NextWeek').
    * @type {SecondaryFilter}
    */
-  const activeSecondaryFilter = ref<string>('All');
+  const activeSecondaryFilter = ref<string>("All");
   /**
    * Reactive reference for the search query string.
    * @type {string}
    */
-  const searchQuery = ref<string>('');
+  const searchQuery = ref<string>("");
 
-  
   /**
    * Returns a new Date object set to the start of the day (00:00:00:000) for the given date.
    * @param {Date} date - The date to get the start of the day for.
@@ -129,10 +205,15 @@ export const useEventStore = defineStore('eventStore', () => {
    * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
    * @returns {boolean} True if the event date is earlier today, false otherwise.
    */
-   const isEarlierToday = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
-    
-    return getStartOfDay(eventDate).getTime() === getStartOfDay(referenceDate).getTime() &&
-           new Date(eventDate).getTime() < referenceDate.getTime();
+  const isEarlierToday = (
+    eventDate: Date,
+    referenceDate: Date = new Date(),
+  ): boolean => {
+    return (
+      getStartOfDay(eventDate).getTime() ===
+        getStartOfDay(referenceDate).getTime() &&
+      new Date(eventDate).getTime() < referenceDate.getTime()
+    );
   };
 
   /**
@@ -144,7 +225,7 @@ export const useEventStore = defineStore('eventStore', () => {
   const isNextWeek = (date: Date): boolean => {
     const today = getStartOfDay(new Date());
     const nextWeekStart = new Date(today);
-    nextWeekStart.setDate(today.getDate() + ((7 - today.getDay()) % 7) );
+    nextWeekStart.setDate(today.getDate() + ((7 - today.getDay()) % 7));
     if (nextWeekStart.getTime() <= today.getTime()) {
       nextWeekStart.setDate(nextWeekStart.getDate() + 7);
     }
@@ -193,13 +274,18 @@ export const useEventStore = defineStore('eventStore', () => {
    * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
    * @returns {boolean} True if the event date is in the past week, false otherwise.
    */
-  const isPastWeek = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  const isPastWeek = (
+    eventDate: Date,
+    referenceDate: Date = new Date(),
+  ): boolean => {
     const today = getStartOfDay(referenceDate);
     const oneWeekAgo = new Date(today);
     oneWeekAgo.setDate(today.getDate() - 7);
-    
-    return getStartOfDay(eventDate).getTime() >= oneWeekAgo.getTime() &&
-           getStartOfDay(eventDate).getTime() < today.getTime();
+
+    return (
+      getStartOfDay(eventDate).getTime() >= oneWeekAgo.getTime() &&
+      getStartOfDay(eventDate).getTime() < today.getTime()
+    );
   };
 
   /**
@@ -208,24 +294,30 @@ export const useEventStore = defineStore('eventStore', () => {
    * @param {Date} [referenceDate=new Date()] - The reference date (defaults to current date).
    * @returns {boolean} True if the event date is in the past month, false otherwise.
    */
-  const isPastMonth = (eventDate: Date, referenceDate: Date = new Date()): boolean => {
+  const isPastMonth = (
+    eventDate: Date,
+    referenceDate: Date = new Date(),
+  ): boolean => {
     const today = getStartOfDay(referenceDate);
     const oneMonthAgo = new Date(today);
     oneMonthAgo.setMonth(today.getMonth() - 1);
-    
-    return getStartOfDay(eventDate).getTime() >= oneMonthAgo.getTime() &&
-           getStartOfDay(eventDate).getTime() < today.getTime();
+
+    return (
+      getStartOfDay(eventDate).getTime() >= oneMonthAgo.getTime() &&
+      getStartOfDay(eventDate).getTime() < today.getTime()
+    );
   };
 
-
-  
   /**
    * Computed property that returns a function to find an event by its ID.
    * @returns {(id: string) => import('../types/event').SharedEventItem | undefined} A function that takes an event ID and returns the matching event or undefined.
    */
-  const getEventById = computed(() => (id: string): SharedEventItem | undefined => {
-    return events.value.find(event => event.id === id);
-  });
+  const getEventById = computed(
+    () =>
+      (id: string): SharedEventItem | undefined => {
+        return events.value.find((event) => event.id === id);
+      },
+  );
 
   /**
    * Computed property that returns all events.
@@ -241,9 +333,11 @@ export const useEventStore = defineStore('eventStore', () => {
    */
   const upcomingEvents = computed((): SharedEventItem[] => {
     const now = new Date();
-    
+
     return events.value
-      .filter(event => event.startDate.getTime() >= getStartOfDay(now).getTime()) 
+      .filter(
+        (event) => event.startDate.getTime() >= getStartOfDay(now).getTime(),
+      )
       .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
   });
 
@@ -251,14 +345,17 @@ export const useEventStore = defineStore('eventStore', () => {
    * Computed property that returns events that have already started or are earlier today, sorted by start date in descending order.
    * @returns {import('../types/event').SharedEventItem[]} An array of recent events.
    */
-   const recentEvents = computed((): SharedEventItem[] => {
+  const recentEvents = computed((): SharedEventItem[] => {
     const now = new Date();
-     
-    return events.value
-      .filter(event => event.startDate.getTime() < getStartOfDay(now).getTime() || isEarlierToday(event.startDate, now))
-      .sort((a, b) => b.startDate.getTime() - a.startDate.getTime()); 
-  });
 
+    return events.value
+      .filter(
+        (event) =>
+          event.startDate.getTime() < getStartOfDay(now).getTime() ||
+          isEarlierToday(event.startDate, now),
+      )
+      .sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+  });
 
   /**
    * Computed property that returns events filtered by primary filter (Upcoming/Recent),
@@ -267,53 +364,68 @@ export const useEventStore = defineStore('eventStore', () => {
    */
   const filteredEvents = computed((): SharedEventItem[] => {
     const now = new Date();
-    const source = activePrimaryFilter.value === 'Upcoming' ? upcomingEvents.value : recentEvents.value;
+    const source =
+      activePrimaryFilter.value === "Upcoming"
+        ? upcomingEvents.value
+        : recentEvents.value;
     const query = searchQuery.value.toLowerCase();
 
-    
     let filteredBySecondary = source;
-    if (activePrimaryFilter.value === 'Upcoming') {
+    if (activePrimaryFilter.value === "Upcoming") {
       switch (activeSecondaryFilter.value) {
-        case 'Today':
-          filteredBySecondary = source.filter((activity) => isToday(activity.startDate));
+        case "Today":
+          filteredBySecondary = source.filter((activity) =>
+            isToday(activity.startDate),
+          );
           break;
-        case 'NextWeek':
-          filteredBySecondary = source.filter((activity) => isNextWeek(activity.startDate));
+        case "NextWeek":
+          filteredBySecondary = source.filter((activity) =>
+            isNextWeek(activity.startDate),
+          );
           break;
-        case 'NextMonth':
-          filteredBySecondary = source.filter((activity) => isNextMonth(activity.startDate));
+        case "NextMonth":
+          filteredBySecondary = source.filter((activity) =>
+            isNextMonth(activity.startDate),
+          );
           break;
-        case 'All':
+        case "All":
         default:
-          filteredBySecondary = source; 
+          filteredBySecondary = source;
       }
-    } else { 
+    } else {
       switch (activeSecondaryFilter.value) {
-        case 'EarlierToday':
-          filteredBySecondary = source.filter((activity) => isEarlierToday(activity.startDate, now));
+        case "EarlierToday":
+          filteredBySecondary = source.filter((activity) =>
+            isEarlierToday(activity.startDate, now),
+          );
           break;
-        case 'PastWeek':
-          filteredBySecondary = source.filter((activity) => isPastWeek(activity.startDate, now));
+        case "PastWeek":
+          filteredBySecondary = source.filter((activity) =>
+            isPastWeek(activity.startDate, now),
+          );
           break;
-        case 'PastMonth':
-          filteredBySecondary = source.filter((activity) => isPastMonth(activity.startDate, now));
+        case "PastMonth":
+          filteredBySecondary = source.filter((activity) =>
+            isPastMonth(activity.startDate, now),
+          );
           break;
-        case 'All':
+        case "All":
         default:
-          filteredBySecondary = source; 
+          filteredBySecondary = source;
       }
     }
 
-    
     if (query) {
-      return filteredBySecondary.filter(event =>
-        event.title.toLowerCase().includes(query) ||
-        (event.description && event.description.toLowerCase().includes(query)) ||
-        (event.subject && event.subject.toLowerCase().includes(query)) ||
-        (event.course && event.course.toLowerCase().includes(query)) ||
-        (event.location && event.location.toLowerCase().includes(query)) ||
-        event.type.toLowerCase().includes(query) ||
-        (event.status && event.status.toLowerCase().includes(query))
+      return filteredBySecondary.filter(
+        (event) =>
+          event.title.toLowerCase().includes(query) ||
+          (event.description &&
+            event.description.toLowerCase().includes(query)) ||
+          (event.subject && event.subject.toLowerCase().includes(query)) ||
+          (event.course && event.course.toLowerCase().includes(query)) ||
+          (event.location && event.location.toLowerCase().includes(query)) ||
+          event.type.toLowerCase().includes(query) ||
+          (event.status && event.status.toLowerCase().includes(query)),
       );
     } else {
       return filteredBySecondary;
@@ -336,37 +448,47 @@ export const useEventStore = defineStore('eventStore', () => {
       NextMonth: 0,
       EarlierToday: 0,
       PastWeek: 0,
-      PastMonth: 0
+      PastMonth: 0,
     };
 
-    if (activePrimaryFilter.value === 'Upcoming') {
+    if (activePrimaryFilter.value === "Upcoming") {
       return {
         ...defaultCounts,
         All: upcomingSource.length,
-        Today: upcomingSource.filter((activity) => isToday(activity.startDate)).length,
-        NextWeek: upcomingSource.filter((activity) => isNextWeek(activity.startDate)).length,
-        NextMonth: upcomingSource.filter((activity) => isNextMonth(activity.startDate)).length,
+        Today: upcomingSource.filter((activity) => isToday(activity.startDate))
+          .length,
+        NextWeek: upcomingSource.filter((activity) =>
+          isNextWeek(activity.startDate),
+        ).length,
+        NextMonth: upcomingSource.filter((activity) =>
+          isNextMonth(activity.startDate),
+        ).length,
       };
-    } else { 
+    } else {
       return {
         ...defaultCounts,
         All: recentSource.length,
-        EarlierToday: recentSource.filter((activity) => isEarlierToday(activity.startDate, now)).length,
-        PastWeek: recentSource.filter((activity) => isPastWeek(activity.startDate, now)).length,
-        PastMonth: recentSource.filter((activity) => isPastMonth(activity.startDate, now)).length,
+        EarlierToday: recentSource.filter((activity) =>
+          isEarlierToday(activity.startDate, now),
+        ).length,
+        PastWeek: recentSource.filter((activity) =>
+          isPastWeek(activity.startDate, now),
+        ).length,
+        PastMonth: recentSource.filter((activity) =>
+          isPastMonth(activity.startDate, now),
+        ).length,
       };
     }
   });
 
-  
   /**
    * Adds a new event to the store. A unique ID is generated for the new event.
    * @param {Omit<import('../types/event').SharedEventItem, 'id'>} eventData - The event data without an ID.
    */
-  function addEvent(eventData: Omit<SharedEventItem, 'id'>) {
+  function addEvent(eventData: Omit<SharedEventItem, "id">) {
     const newEvent: SharedEventItem = {
       ...eventData,
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 9), 
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
     };
     events.value.push(newEvent);
   }
@@ -376,7 +498,9 @@ export const useEventStore = defineStore('eventStore', () => {
    * @param {import('../types/event').SharedEventItem} updatedEvent - The updated event object.
    */
   function updateEvent(updatedEvent: SharedEventItem) {
-    const index = events.value.findIndex(event => event.id === updatedEvent.id);
+    const index = events.value.findIndex(
+      (event) => event.id === updatedEvent.id,
+    );
     if (index !== -1) {
       events.value[index] = updatedEvent;
     }
@@ -387,7 +511,7 @@ export const useEventStore = defineStore('eventStore', () => {
    * @param {string} eventId - The ID of the event to delete.
    */
   function deleteEvent(eventId: string) {
-    events.value = events.value.filter(event => event.id !== eventId);
+    events.value = events.value.filter((event) => event.id !== eventId);
   }
 
   /**
@@ -402,69 +526,111 @@ export const useEventStore = defineStore('eventStore', () => {
       const now = new Date();
       events.value = [
         {
-          id: 'sample-event-1',
-          title: 'Team Sync Meeting',
-          description: 'Weekly team synchronization meeting.',
-          startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 10, 0), 
-          endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 11, 0),   
+          id: "sample-event-1",
+          title: "Team Sync Meeting",
+          description: "Weekly team synchronization meeting.",
+          startDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 1,
+            10,
+            0,
+          ),
+          endDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 1,
+            11,
+            0,
+          ),
           allDay: false,
-          type: 'ClassSession',
-          subject: 'Project Alpha',
-          course: 'CS500',
-          status: 'Scheduled',
-          location: 'Online Conference Room',
-          color: '#3b82f6'
+          type: "ClassSession",
+          subject: "Project Alpha",
+          course: "CS500",
+          status: "Scheduled",
+          location: "Online Conference Room",
+          color: "#3b82f6",
         },
         {
-          id: 'sample-event-2',
-          title: 'Project Deadline',
-          description: 'Final submission for Project Beta.',
-          startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 23, 59), 
+          id: "sample-event-2",
+          title: "Project Deadline",
+          description: "Final submission for Project Beta.",
+          startDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 3,
+            23,
+            59,
+          ),
           allDay: true,
-          type: 'Project',
-          subject: 'Project Beta',
-          course: 'CS501',
-          status: 'Pending',
-          color: '#ef4444'
-        },
-         {
-          id: 'sample-event-3',
-          title: 'Quiz 2',
-          startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 14, 0), 
-          allDay: false,
-          type: 'Quiz',
-          subject: 'Data Structures',
-          course: 'CS201',
-          status: 'Scheduled',
-          location: 'Room 101',
-          color: '#f97316' 
+          type: "Project",
+          subject: "Project Beta",
+          course: "CS501",
+          status: "Pending",
+          color: "#ef4444",
         },
         {
-          id: 'sample-event-4',
-          title: 'Past Project Meeting',
-          description: 'Discussed initial phase of Project Gamma.',
-          startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 14, 0), 
-          endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 15, 0),   
+          id: "sample-event-3",
+          title: "Quiz 2",
+          startDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 7,
+            14,
+            0,
+          ),
           allDay: false,
-          type: 'ClassSession',
-          subject: 'Project Gamma',
-          course: 'CS600',
-          status: 'Completed',
-          location: 'Online Conference Room',
-          color: '#a855f7' 
+          type: "Quiz",
+          subject: "Data Structures",
+          course: "CS201",
+          status: "Scheduled",
+          location: "Room 101",
+          color: "#f97316",
         },
         {
-          id: 'sample-event-5',
-          title: 'Past Assignment Due',
-          description: 'Submission for Assignment 1.',
-          startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10, 23, 59), 
+          id: "sample-event-4",
+          title: "Past Project Meeting",
+          description: "Discussed initial phase of Project Gamma.",
+          startDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - 2,
+            14,
+            0,
+          ),
+          endDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - 2,
+            15,
+            0,
+          ),
+          allDay: false,
+          type: "ClassSession",
+          subject: "Project Gamma",
+          course: "CS600",
+          status: "Completed",
+          location: "Online Conference Room",
+          color: "#a855f7",
+        },
+        {
+          id: "sample-event-5",
+          title: "Past Assignment Due",
+          description: "Submission for Assignment 1.",
+          startDate: new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - 10,
+            23,
+            59,
+          ),
           allDay: true,
-          type: 'Assignment',
-          subject: 'Data Structures',
-          course: 'CS201',
-          status: 'Completed',
-          color: '#22c55e' 
-        }
+          type: "Assignment",
+          subject: "Data Structures",
+          course: "CS201",
+          status: "Completed",
+          color: "#22c55e",
+        },
       ];
     }
   }
@@ -489,9 +655,9 @@ export const useEventStore = defineStore('eventStore', () => {
    * Sets the active primary filter and resets the secondary filter to 'All'.
    * @param {PrimaryFilter} filter - The primary filter to set ('Upcoming' or 'Recent').
    */
-  function setActivePrimaryFilter(filter: 'Upcoming' | 'Recent') {
+  function setActivePrimaryFilter(filter: "Upcoming" | "Recent") {
     activePrimaryFilter.value = filter;
-    activeSecondaryFilter.value = 'All'; 
+    activeSecondaryFilter.value = "All";
   }
 
   /**
@@ -503,28 +669,25 @@ export const useEventStore = defineStore('eventStore', () => {
   }
 
   return {
-    
     events,
     activePrimaryFilter,
     activeSecondaryFilter,
-    searchQuery, 
+    searchQuery,
 
-    
     getEventById,
     allEvents,
     upcomingEvents,
-    recentEvents, 
-    filteredEvents, 
-    secondaryFilterCounts, 
+    recentEvents,
+    filteredEvents,
+    secondaryFilterCounts,
 
-    
     addEvent,
     updateEvent,
     deleteEvent,
     loadEvents,
     setEvents,
-    setSearchQuery, 
-    setActivePrimaryFilter, 
-    setActiveSecondaryFilter, 
+    setSearchQuery,
+    setActivePrimaryFilter,
+    setActiveSecondaryFilter,
   };
 });

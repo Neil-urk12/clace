@@ -5,15 +5,15 @@ import {
   ChevronRight,
   Plus,
   Calendar as CalendarIcon,
-
-
   List,
   Grid3x3,
   Menu,
 } from "lucide-vue-next";
 const CalendarGrid = defineAsyncComponent(() => import("../components/Calendar/CalendarGrid.vue"));
 const EventModal = defineAsyncComponent(() => import("../components/Calendar/EventModal.vue"));
-const CalendarSidebar = defineAsyncComponent(() => import("../components/Calendar/CalendarSidebar.vue"));import { useEventStore } from "../stores/eventStore";
+const CalendarSidebar = defineAsyncComponent(() => import("../components/Calendar/CalendarSidebar.vue"));
+import BaseButton from "../components/Global/BaseButton.vue";
+import { useEventStore } from "../stores/eventStore";
 import type { SharedEventItem } from "../types/event";
 
 const eventStore = useEventStore();
@@ -29,7 +29,6 @@ const sidebarOpen = ref(false);
 
 const eventsFromStore = computed(() => eventStore.allEvents);
 
-
 const currentMonth = computed(() =>
   currentDate.value.toLocaleDateString("en-US", {
     month: "long",
@@ -42,12 +41,8 @@ const toggleSidebar = () => {
 };
 
 const handleMiniCalendarDateSelect = (date: Date) => {
-  // Update the main calendar's view date if necessary
   currentDate.value = new Date(date);
-  // Set the date to be highlighted in the main grid
   highlightedDate.value = date;
-  // Do NOT open the modal when clicking a date in the mini calendar
-  // selectedDate.value = date; // Keep selectedDate for modal creation triggered elsewhere
   isCreatingEvent.value = false;
   showEventModal.value = false;
 };
@@ -97,7 +92,6 @@ const handleEventClick = (event: SharedEventItem) => {
 };
 
 const handleCreateEvent = (eventData: Partial<SharedEventItem>) => {
-  // Assuming eventData from modal is Omit<SharedEventItem, 'id'> or can be cast
   eventStore.addEvent(eventData as Omit<SharedEventItem, "id">);
   showEventModal.value = false;
   selectedEvent.value = null;
@@ -106,7 +100,6 @@ const handleCreateEvent = (eventData: Partial<SharedEventItem>) => {
 
 const handleUpdateEvent = (eventData: Partial<SharedEventItem>) => {
   if (eventData.id) {
-    // Ensure id is present for update
     eventStore.updateEvent(eventData as SharedEventItem);
   }
   showEventModal.value = false;
@@ -126,7 +119,6 @@ const closeModal = () => {
   isCreatingEvent.value = false;
 };
 
-// Keyboard shortcuts
 const handleKeyPress = (event: KeyboardEvent) => {
   if (event.key === "Escape") {
     closeModal();
@@ -213,16 +205,18 @@ onUnmounted(() => {
         </div>
 
         <div class="header-right">
-          <button
+          <BaseButton
             @click="
               isCreatingEvent = true;
               showEventModal = true;
             "
-            class="create-btn"
+            design="gradient-primary"
+            size="large"
+            :icon-left="Plus"
+            class="create-event-btn"
           >
-            <Plus :size="20" />
             <span class="create-text">Create Event</span>
-          </button>
+          </BaseButton>
         </div>
       </div>
 
@@ -257,19 +251,11 @@ onUnmounted(() => {
 <style scoped>
 .calendar-view {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow: hidden;
   position: relative;
-}
-
-/* Mobile bottom navigation spacing */
-@media (max-width: 767px) {
-  .calendar-view {
-    min-height: calc(100vh - 80px);
-    height: auto;
-  }
 }
 
 .calendar-view::before {
@@ -286,7 +272,6 @@ onUnmounted(() => {
   );
   pointer-events: none;
 }
-
 
 .sidebar-overlay {
   position: fixed;
@@ -306,7 +291,7 @@ onUnmounted(() => {
   flex-direction: column;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -352,6 +337,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+  min-height: 80px;
 }
 
 .calendar-header::before {
@@ -528,55 +514,17 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.create-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border: none;
-  border-radius: 16px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px 0 rgba(16, 185, 129, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.create-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.create-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.6);
-}
-
-.create-btn:hover::before {
-  left: 100%;
+.create-text {
+  display: inline;
 }
 
 .calendar-content {
-  overflow: hidden;
+  flex: 1;
   padding: 1.5rem;
   position: relative;
   z-index: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-content::before {
@@ -595,10 +543,41 @@ onUnmounted(() => {
   z-index: -1;
 }
 
-/* Tablet and Mobile Design - Use overlay for better UX on smaller screens */
-/* This ensures the sidebar doesn't push content on tablets (768px-1024px) */
+/* Desktop-specific styles - ensure full height utilization */
+@media (min-width: 1025px) {
+  .calendar-view {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .main-content {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .calendar-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .calendar-content::before {
+    top: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+  }
+}
+
+/* Tablet and Mobile Design */
 @media (max-width: 1024px) {
   .calendar-view {
+    min-height: calc(100vh - 50px);
+    height: auto;
+  }
+
+  .main-content {
     min-height: calc(100vh - 50px);
     height: auto;
   }
@@ -630,6 +609,7 @@ onUnmounted(() => {
     color: white;
     border-bottom: none;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    min-height: auto;
   }
 
   .sidebar-toggle-btn {
@@ -645,74 +625,6 @@ onUnmounted(() => {
     background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     color: white;
-  }
-
-  .sidebar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  }
-
-  /* Ensure smooth overlay transition on tablets */
-  .sidebar-overlay {
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-  }
-
-  .sidebar-title {
-    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .sidebar-toggle {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #4c1d95;
-  }
-
-  .sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: #3730a3;
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .section-title {
-    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .event-item {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .event-item:hover {
-    background: rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .event-title {
-    color: #4c1d95;
-  }
-
-  .event-time {
-    color: #6366f1;
-  }
-
-  .event-course {
-    color: #7c3aed;
-  }
-
-  .no-events {
-    color: #6366f1;
   }
 
   .calendar-header::before {
@@ -790,20 +702,11 @@ onUnmounted(() => {
     display: none;
   }
 
-  .create-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 0.5rem;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .create-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+  .create-event-btn {
+    padding: 0.5rem !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    border-radius: 50% !important;
   }
 
   .view-controls {
@@ -831,6 +734,8 @@ onUnmounted(() => {
   .calendar-content {
     padding: 1rem;
     background: transparent;
+    flex: 1;
+    overflow: auto;
   }
 
   .calendar-content::before {
@@ -842,24 +747,16 @@ onUnmounted(() => {
   }
 }
 
-/* Tablet specific optimizations (769px to 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .sidebar {
-    width: 320px;
-  }
-
-  .sidebar-content {
-    padding: 2rem 1.5rem;
-    gap: 2rem;
-  }
-
-  .events-list {
-    max-height: 350px;
-  }
-}
-
-/* Small mobile specific adjustments */
+/* Mobile specific adjustments */
 @media (max-width: 480px) {
+  .calendar-view {
+    min-height: calc(100vh - 80px);
+  }
+
+  .main-content {
+    min-height: calc(100vh - 80px);
+  }
+
   .sidebar {
     width: 240px;
   }
@@ -867,24 +764,6 @@ onUnmounted(() => {
   .sidebar-content {
     padding: 1rem 0.75rem;
     gap: 1rem;
-  }
-
-  .events-list {
-    max-height: 200px;
-  }
-
-  .event-item {
-    padding: 0.5rem;
-    gap: 0.5rem;
-  }
-
-  .event-title {
-    font-size: 0.8rem;
-  }
-
-  .event-time,
-  .event-course {
-    font-size: 0.7rem;
   }
 
   .calendar-header {
@@ -922,9 +801,10 @@ onUnmounted(() => {
     margin: 0 0.5rem;
   }
 
-  .create-btn {
-    width: 2rem;
-    height: 2rem;
+  .create-event-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0.5rem !important;
   }
 
   .view-btn {
@@ -943,349 +823,6 @@ onUnmounted(() => {
     right: 0.25rem;
     bottom: 0.25rem;
     border-radius: 12px;
-  }
-}
-
-/* Height-based responsive design for landscape and short screens */
-@media (max-height: 700px) {
-  .calendar-view {
-    min-height: 100vh;
-    height: auto;
-    overflow-y: auto;
-  }
-
-  .sidebar {
-    height: 100vh;
-    overflow-y: auto;
-  }
-
-  .sidebar-content {
-    padding: 1rem 0.75rem;
-    gap: 1rem;
-  }
-
-  .mini-calendar-section {
-    flex-shrink: 0;
-  }
-
-  .upcoming-events-section {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .events-list {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .calendar-header {
-    padding: 0.75rem 1rem;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-
-  .calendar-content {
-    overflow: hidden;
-    padding: 0.75rem;
-    margin: 0.5rem;
-  }
-
-  .main-content {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .nav-btn {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 0.75rem;
-  }
-
-  .today-btn {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .current-date {
-    font-size: 1.25rem;
-  }
-
-  .create-btn {
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.875rem;
-  }
-
-  .view-btn {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-height: 500px) {
-  .calendar-header {
-    padding: 0.5rem 0.75rem;
-    min-height: 2.5rem;
-  }
-
-  .sidebar-content {
-    padding: 0.75rem 0.5rem;
-    gap: 0.75rem;
-  }
-
-  .events-list {
-    max-height: 150px;
-  }
-
-  .event-item {
-    padding: 0.375rem 0.5rem;
-    gap: 0.375rem;
-  }
-
-  .event-title {
-    font-size: 0.75rem;
-  }
-
-  .event-time,
-  .event-course {
-    font-size: 0.625rem;
-  }
-
-  .section-title {
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .nav-btn {
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 0.625rem;
-  }
-
-  .today-btn {
-    padding: 0.25rem 0.375rem;
-    font-size: 0.625rem;
-  }
-
-  .current-date {
-    font-size: 1rem;
-  }
-
-  .create-btn {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 0.75rem;
-  }
-
-  .view-btn {
-    padding: 0.25rem 0.375rem;
-    font-size: 0.625rem;
-  }
-
-  .calendar-content {
-    padding: 0.375rem;
-    margin: 0.0625rem;
-  }
-
-  .calendar-content::before {
-    top: 0.0625rem;
-    left: 0.0625rem;
-    right: 0.0625rem;
-    bottom: 0.0625rem;
-    border-radius: 8px;
-  }
-}
-
-@media (max-height: 600px) {
-  .calendar-header {
-    padding: 0.75rem 1rem;
-    min-height: 3rem;
-  }
-
-  .sidebar {
-    width: 200px;
-  }
-
-  .sidebar-content {
-    padding: 0.5rem 0.375rem;
-    gap: 0.5rem;
-  }
-
-  .sidebar-title {
-    font-size: 1rem;
-  }
-
-  .events-list {
-    max-height: 100px;
-  }
-
-  .event-item {
-    padding: 0.25rem 0.375rem;
-    gap: 0.25rem;
-  }
-
-  .event-title {
-    font-size: 0.625rem;
-  }
-
-  .event-time,
-  .event-course {
-    font-size: 0.5rem;
-  }
-
-  .section-title {
-    font-size: 0.75rem;
-    margin-bottom: 0.375rem;
-  }
-
-  .nav-btn {
-    width: 1.25rem;
-    height: 1.25rem;
-    font-size: 0.5rem;
-  }
-
-  .today-btn {
-    padding: 0.125rem 0.25rem;
-    font-size: 0.5rem;
-  }
-
-  .current-date {
-    font-size: 0.875rem;
-    margin: 0 0.25rem;
-  }
-
-  .create-btn {
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 0.625rem;
-  }
-
-  .view-btn {
-    padding: 0.125rem 0.25rem;
-    font-size: 0.5rem;
-  }
-
-  .calendar-content {
-    padding: 0.375rem;
-    margin: 0.125rem;
-  }
-}
-
-/* Combined width and height responsive for very small screens */
-@media (max-width: 480px) and (max-height: 600px) {
-  .calendar-view {
-    font-size: 0.875rem;
-  }
-
-  .sidebar {
-    width: 180px;
-  }
-
-  .sidebar-content {
-    padding: 0.5rem 0.25rem;
-    gap: 0.5rem;
-  }
-
-  .calendar-header {
-    padding: 0.375rem 0.25rem;
-    gap: 0.25rem;
-    flex-wrap: wrap;
-  }
-
-  .header-left {
-    order: 1;
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .header-center {
-    order: 3;
-    width: 100%;
-    margin-top: 0.25rem;
-  }
-
-  .header-right {
-    order: 2;
-    position: static;
-    width: auto;
-  }
-
-  .nav-controls {
-    gap: 0.125rem;
-  }
-
-  .current-date {
-    font-size: 0.75rem;
-    margin: 0;
-  }
-
-  .view-controls {
-    margin-top: 0.25rem;
-  }
-
-  .events-list {
-    max-height: 80px;
-  }
-
-  .event-item {
-    padding: 0.125rem 0.25rem;
-    gap: 0.125rem;
-  }
-
-  .calendar-content {
-    padding: 0.25rem;
-    margin: 0.125rem;
-  }
-
-  .calendar-content::before {
-    top: 0.0625rem;
-    left: 0.0625rem;
-    right: 0.0625rem;
-    bottom: 0.0625rem;
-    border-radius: 6px;
-  }
-}
-
-@media (max-width: 768px) and (max-height: 500px) {
-  .calendar-header {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.25rem 0.5rem;
-  }
-
-  .header-left {
-    order: 1;
-    width: auto;
-    flex: 0 0 auto;
-  }
-
-  .header-center {
-    order: 2;
-    width: auto;
-    flex: 1;
-    margin: 0 0.5rem;
-  }
-
-  .header-right {
-    order: 3;
-    width: auto;
-    flex: 0 0 auto;
-    position: static;
-  }
-
-  .view-controls {
-    order: 4;
-    width: 100%;
-    margin-top: 0.25rem;
-  }
-
-  .current-date {
-    font-size: 0.75rem;
-    text-align: center;
   }
 }
 </style>

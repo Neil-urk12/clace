@@ -6,13 +6,17 @@ interface BaseButtonProps {
   design?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'icon-only' | 'gradient-primary' | 'gradient-danger';
   size?: '' | 'large';
   disabled?: boolean;
+  iconLeft?: object;
+  iconRight?: object;
 }
 
 const props = withDefaults(defineProps<BaseButtonProps>(), {
   type: 'button',
   design: 'primary',
   size: '',
-  disabled: false
+  disabled: false,
+  iconLeft: undefined,
+  iconRight: undefined
 });
 
 const emit = defineEmits(['click']);
@@ -32,7 +36,9 @@ const handleClick = (event: MouseEvent) => {
 
 <template>
   <button :type="type" :class="buttonClass" @click="handleClick" :disabled="disabled">
+    <component v-if="iconLeft" :is="iconLeft" class="btn-icon-left" />
     <slot></slot>
+    <component v-if="iconRight" :is="iconRight" class="btn-icon-right" />
   </button>
 </template>
 
@@ -219,5 +225,13 @@ const handleClick = (event: MouseEvent) => {
 .btn svg {
   width: 1.25em;
   height: 1.25em;
+}
+
+.btn-icon-left {
+  margin-right: 0.5rem;
+}
+
+.btn-icon-right {
+  margin-left: 0.5rem;
 }
 </style>

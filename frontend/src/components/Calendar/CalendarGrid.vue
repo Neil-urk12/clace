@@ -40,6 +40,10 @@ const monthDays = computed(() => {
     current.setDate(current.getDate() + 1);
   }
 
+  const lastWeek = days.slice(-7);
+  if (lastWeek.every(d => d.getMonth() !== month)) {
+    return days.slice(0, 35);
+  }
   return days;
 });
 
@@ -162,7 +166,7 @@ const handleEventClick = (event: SharedEventItem) => {
         </div>
       </div>
 
-      <div class="month-grid">
+      <div class="month-grid" :style="{ gridTemplateRows: `repeat(${monthDays.length/7}, 1fr)` }">
         <div
           v-for="date in monthDays"
           :key="date.toISOString()"
@@ -176,7 +180,9 @@ const handleEventClick = (event: SharedEventItem) => {
           ]"
           @click="handleDateClick(date)"
         >
-          <div class="day-number">{{ date.getDate() }}</div>
+          <div class="day-number">
+            {{ isCurrentMonth(date) ? date.getDate() : "" }}
+          </div>
           <div class="day-events">
             <CalendarEventComponent
               v-for="event in getEventsForDate(date).slice(0, 3)"
@@ -327,18 +333,16 @@ const handleEventClick = (event: SharedEventItem) => {
 .calendar-grid {
   width: 100%;
   height: 100%;
-  max-height: 100%;
-  position: relative;
-  z-index: 2;
-  border-radius: 20px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .month-view {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -353,6 +357,7 @@ const handleEventClick = (event: SharedEventItem) => {
   border-radius: 12px 12px 0 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  height: 60px;
 }
 
 .day-header {
@@ -367,6 +372,9 @@ const handleEventClick = (event: SharedEventItem) => {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .day-header::before {
@@ -392,37 +400,11 @@ const handleEventClick = (event: SharedEventItem) => {
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, auto);
+  flex: 1;
   gap: 1px;
   background: rgba(255, 255, 255, 0.1);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
-}
-
-.month-grid::-webkit-scrollbar,
-.time-grid::-webkit-scrollbar,
-.time-slots::-webkit-scrollbar {
-  width: 6px;
-}
-
-.month-grid::-webkit-scrollbar-track,
-.time-grid::-webkit-scrollbar-track,
-.time-slots::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.month-grid::-webkit-scrollbar-thumb,
-.time-grid::-webkit-scrollbar-thumb,
-.time-slots::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
-  border-radius: 3px;
-}
-
-.month-grid::-webkit-scrollbar-thumb:hover,
-.time-grid::-webkit-scrollbar-thumb:hover,
-.time-slots::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
+  overflow: hidden;
+  min-height: 0;
 }
 
 .day-cell {
@@ -435,7 +417,7 @@ const handleEventClick = (event: SharedEventItem) => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 80px;
+  /* min-height: 0; */
 }
 
 .day-cell::before {
@@ -494,14 +476,14 @@ const handleEventClick = (event: SharedEventItem) => {
 }
 
 .day-cell.highlighted {
-  border: 2px solid #7c3aed; /* Highlight border */
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3); /* Soft glow effect */
-  transform: scale(1.02); /* Slightly larger scale for emphasis */
+  border: 2px solid #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+  transform: scale(1.02);
 }
 
 .day-cell.highlighted:hover {
-  border-color: #6d28d9; /* Darker border on hover */
-  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.4); /* Stronger glow on hover */
+  border-color: #6d28d9;
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.4);
 }
 
 .day-cell.other-month .day-number {
@@ -515,6 +497,7 @@ const handleEventClick = (event: SharedEventItem) => {
   font-size: 1rem;
   z-index: 1;
   position: relative;
+  flex-shrink: 0;
 }
 
 .day-events {
@@ -526,6 +509,7 @@ const handleEventClick = (event: SharedEventItem) => {
   overflow: hidden;
   z-index: 1;
   position: relative;
+  min-height: 0;
 }
 
 .more-events {
@@ -542,7 +526,6 @@ const handleEventClick = (event: SharedEventItem) => {
 /* Week View */
 .week-view {
   height: 100%;
-  max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -558,6 +541,7 @@ const handleEventClick = (event: SharedEventItem) => {
   );
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
 }
 
 .time-header {
@@ -608,6 +592,7 @@ const handleEventClick = (event: SharedEventItem) => {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   min-height: 60px;
+  flex-shrink: 0;
 }
 
 .all-day-label {
@@ -649,6 +634,23 @@ const handleEventClick = (event: SharedEventItem) => {
   scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
 }
 
+.time-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.time-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.time-grid::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+}
+
+.time-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
 .hour-row {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
@@ -683,7 +685,6 @@ const handleEventClick = (event: SharedEventItem) => {
 /* Day View */
 .day-view {
   height: 100%;
-  max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -699,6 +700,7 @@ const handleEventClick = (event: SharedEventItem) => {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
+  flex-shrink: 0;
 }
 
 .day-view .day-header h2 {
@@ -711,7 +713,7 @@ const handleEventClick = (event: SharedEventItem) => {
   background-clip: text;
 }
 
-.all-day-section {
+.day-view .all-day-section {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -739,6 +741,23 @@ const handleEventClick = (event: SharedEventItem) => {
   min-height: 0;
   scrollbar-width: thin;
   scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+}
+
+.time-slots::-webkit-scrollbar {
+  width: 6px;
+}
+
+.time-slots::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.time-slots::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+}
+
+.time-slots::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
 }
 
 .time-slot {
@@ -776,27 +795,79 @@ const handleEventClick = (event: SharedEventItem) => {
   position: relative;
 }
 
-@media (min-width: 1024px) {
+/* Desktop-specific styles - no scrolling, full height utilization */
+@media (min-width: 1025px) {
+  .calendar-grid {
+    height: 100%;
+    overflow: hidden;
+  }
+
   .month-view {
     height: 100%;
+    overflow: hidden;
   }
+
   .month-grid {
-    flex: 1;
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-rows: repeat(var(--weeks-count, 6), 1fr);
+    overflow: hidden;
   }
+
   .day-cell {
-    min-height: 115px;
+    min-height: 80px;
+  }
+
+  .week-view {
+    overflow: hidden;
+  }
+
+  .day-view {
+    overflow: hidden;
+  }
+
+  .time-grid {
+    overflow-y: auto;
+  }
+
+  .time-slots {
+    overflow-y: auto;
+  }
+  .week-header {
+    height: 60px; /* Fixed height */
+    flex-shrink: 0;
   }
 }
 
-/* Responsive Design */
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .calendar-grid {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .month-view {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .month-grid {
+    overflow: hidden;
+  }
+
+  .day-cell {
+    min-height: 100px;
+  }
+}
+
 @media (max-width: 768px) {
   .calendar-grid {
     border-radius: 12px;
+    height: auto;
+    min-height: 0;
   }
 
   .month-view {
     font-size: 0.875rem;
+    height: auto;
   }
 
   .week-header {
@@ -805,6 +876,7 @@ const handleEventClick = (event: SharedEventItem) => {
       rgba(102, 126, 234, 0.15) 0%,
       rgba(118, 75, 162, 0.15) 100%
     );
+    min-height: 50px;
   }
 
   .day-header {
@@ -815,6 +887,9 @@ const handleEventClick = (event: SharedEventItem) => {
 
   .month-grid {
     gap: 0.5px;
+    overflow-y: auto;
+    max-height: 70vh;
+    grid-template-rows: auto;
   }
 
   .day-cell {
@@ -840,7 +915,7 @@ const handleEventClick = (event: SharedEventItem) => {
 
   .day-cell.today .day-number {
     width: 1.5rem;
-    height: 0.5rem;
+    height: 1.5rem;
     font-size: 0.75rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -900,6 +975,16 @@ const handleEventClick = (event: SharedEventItem) => {
 
   .time-slot {
     min-height: 60px;
+  }
+
+  .time-grid {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .time-slots {
+    max-height: 60vh;
+    overflow-y: auto;
   }
 }
 
@@ -978,405 +1063,68 @@ const handleEventClick = (event: SharedEventItem) => {
     text-align: center;
     line-height: 1;
   }
-}
-
-/* Enhanced Mobile Responsive Grid */
-@media (max-width: 768px) {
-  .calendar-grid {
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .week-header {
-    background: linear-gradient(
-      135deg,
-      rgba(102, 126, 234, 0.2) 0%,
-      rgba(118, 75, 162, 0.2) 100%
-    );
-  }
 
   .month-grid {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  /* Show all 7 days on mobile with compact layout */
-  .week-header {
-    grid-template-columns: repeat(7, 1fr);
-  }
-
-  .month-grid {
-    grid-template-columns: repeat(7, 1fr);
-  }
-
-  .day-events {
-    padding: 0 0.25rem 0.25rem;
-    gap: 0.1rem;
-  }
-
-  .day-events .calendar-event.compact {
-    font-size: 0.4rem;
-    padding: 0.05rem 0.1rem;
-    border-radius: 2px;
-    min-height: 12px;
-    margin: 0.1rem 0;
-    background: linear-gradient(
-      135deg,
-      var(--event-color, #667eea),
-      var(--event-color-dark, #5a67d8)
-    );
-  }
-
-  .day-events .calendar-event.compact .event-content {
-    text-align: center;
-    font-weight: 500;
-  }
-
-  .day-events .calendar-event.compact:hover::after {
-    content: attr(title);
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    z-index: 1000;
-    white-space: nowrap;
-    max-width: 80vw;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.3);
+    max-height: 60vh;
   }
 }
-
-/* Height-based responsive design for landscape and short screens */
-@media (max-height: 700px) {
-  .calendar-grid {
-    height: 100%;
-    max-height: 100vh;
-    overflow: hidden;
-  }
-
-  .month-view {
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-  }
-
+@media (min-width: 1025px) and (max-height: 800px) {
   .week-header {
-    flex-shrink: 0;
-    padding: 0.5rem 0;
+    height: 50px;
   }
-
-  .day-header {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
-  }
-
-  .month-grid {
-    grid-template-rows: repeat(6, auto);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
-  }
-
-  .month-grid::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .month-grid::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .month-grid::-webkit-scrollbar-thumb {
-    background: rgba(102, 126, 234, 0.3);
-    border-radius: 3px;
-  }
-
-  .month-grid::-webkit-scrollbar-thumb:hover {
-    background: rgba(102, 126, 234, 0.5);
-  }
-
+  
   .day-cell {
     min-height: 60px;
-    padding: 0.25rem;
-    display: flex;
-    flex-direction: column;
   }
+}
 
-  .day-number {
-    padding: 0.25rem 0.5rem;
+@media (min-width: 1025px) and (max-height: 700px) {
+  .week-header {
+    height: 45px;
+  }
+  
+  .day-header {
+    padding: 0.5rem;
     font-size: 0.75rem;
-    flex-shrink: 0;
   }
-
-  .day-events {
-    flex: 1;
-    padding: 0.25rem;
-    gap: 0.1rem;
-    overflow: hidden;
-  }
-
-  .more-events {
-    font-size: 0.5rem;
-    padding: 0.1rem 0.2rem;
-  }
-
-  /* Week view adjustments */
-  .week-view {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-  }
-
-  .week-view .week-header {
-    flex-shrink: 0;
-  }
-
-  .all-day-section {
-    max-height: 80px;
-    overflow-y: auto;
-    flex-shrink: 0;
-  }
-
-  .time-grid {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-  }
-
-  .hour-row {
-    min-height: 40px;
-  }
-
-  .time-label {
-    font-size: 0.625rem;
-    padding: 0.25rem;
-  }
-
-  /* Day view adjustments */
-  .day-view {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-  }
-
-  .day-view .day-header {
-    flex-shrink: 0;
-    padding: 0.75rem 1rem;
-  }
-
-  .day-view .day-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .day-view .all-day-section {
-    max-height: 60px;
-    overflow-y: auto;
-    flex-shrink: 0;
-  }
-
-  .time-slots {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-  }
-
-  .time-slot {
-    min-height: 40px;
-  }
-
-  .time-slot .time-label {
-    font-size: 0.625rem;
-    padding: 0.25rem 0.5rem;
-  }
-}
-
-@media (max-height: 600px) {
-  .month-view {
-    padding: 0.5rem;
-  }
-
-  .week-view {
-    padding: 0.5rem;
-  }
-
-  .day-view {
-    padding: 0.5rem;
-  }
-
-  .month-grid {
-    grid-template-rows: repeat(6, minmax(50px, 1fr));
-  }
-
+  
   .day-cell {
-    min-height: 32px;
-    padding: 0.125rem;
+    min-height: 50px;
   }
-
-  .day-header {
-    padding: 0.375rem 0.25rem;
-    font-size: 0.625rem;
-  }
-
+  
   .day-number {
-    padding: 0.125rem 0.25rem;
-    font-size: 0.625rem;
-  }
-
-  .day-events {
-    padding: 0.125rem;
-    gap: 0.05rem;
-  }
-
-  .hour-row {
-    min-height: 30px;
-  }
-
-  .time-slot {
-    min-height: 30px;
-  }
-}
-
-@media (max-height: 500px) {
-  .month-view {
-    padding: 0.375rem;
-  }
-
-  .week-view {
-    padding: 0.375rem;
-  }
-
-  .day-view {
-    padding: 0.375rem;
-  }
-
-  .month-grid {
-    grid-template-rows: repeat(6, auto);
-  }
-
-  .day-header {
-    padding: 0.25rem 0.125rem;
-    font-size: 0.5rem;
-  }
-
-  .day-cell {
-    min-height: 30px;
-    padding: 0.1rem;
-  }
-
-  .day-number {
-    padding: 0.1rem 0.2rem;
-    font-size: 0.5rem;
-  }
-
-  .day-cell.today .day-number {
-    width: 1rem;
-    height: 1rem;
-    font-size: 0.5rem;
-  }
-
-  .day-events {
-    padding: 0.1rem;
-    gap: 0.025rem;
-  }
-
-  .more-events {
-    font-size: 0.35rem;
-    padding: 0.025rem 0.05rem;
-  }
-
-  .hour-row {
-    min-height: 25px;
-  }
-
-  .time-slot {
-    min-height: 25px;
-  }
-
-  .time-label {
-    font-size: 0.4rem;
-    padding: 0.1rem;
-  }
-
-  .time-slot .time-label {
-    font-size: 0.4rem;
-    padding: 0.1rem 0.2rem;
-  }
-
-  .day-view .day-header {
-    padding: 0.375rem 0.5rem;
-  }
-
-  .day-view .day-header h2 {
+    padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
   }
+  
+  .day-events {
+    padding: 0 0.5rem 0.5rem;
+    gap: 0.125rem;
+  }
 }
 
-/* Height and width combined responsive design for very small screens */
-@media (max-width: 480px) and (max-height: 600px) {
-  .calendar-grid {
-    border-radius: 8px;
+@media (min-width: 1025px) and (max-height: 600px) {
+  .week-header {
+    height: 40px;
   }
-
+  
   .day-header {
-    padding: 0.2rem 0.1rem;
-    font-size: 0.5rem;
-    font-weight: 600;
+    padding: 0.375rem;
+    font-size: 0.625rem;
   }
-
+  
   .day-cell {
-    min-height: 28px;
-    border-radius: 4px;
-  }
-
-  .day-number {
-    padding: 0.1rem 0.2rem;
-    font-size: 0.55rem;
-    text-align: center;
-  }
-
-  .day-cell.today .day-number {
-    width: 1.1rem;
-    height: 1.1rem;
-    font-size: 0.55rem;
-    margin: 0 auto;
-  }
-
-  .day-events {
-    padding: 0 0.1rem 0.1rem;
-    gap: 0.025rem;
-  }
-
-  .day-events .calendar-event.compact {
-    font-size: 0.3rem;
-    padding: 0.01rem 0.025rem;
-    min-height: 6px;
-    border-radius: 1px;
-  }
-
-  .more-events {
-    font-size: 0.35rem;
-    padding: 0.025rem 0.05rem;
-    border-radius: 1px;
-  }
-
-  .time-label {
-    font-size: 0.5rem;
-    padding: 0.125rem 0.25rem;
-  }
-
-  .hour-row {
     min-height: 40px;
   }
-
-  .time-slot {
-    min-height: 45px;
+  
+  .day-number {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .day-events {
+    padding: 0 0.375rem 0.375rem;
+    gap: 0.1rem;
   }
 }
 </style>
