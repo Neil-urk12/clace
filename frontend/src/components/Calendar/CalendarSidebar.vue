@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from "vue";
-import { X } from "lucide-vue-next";
+import { computed, defineAsyncComponent, ref } from "vue";
+import { useRouter } from "vue-router";
+import {
+  X,
+  CalendarDays,
+  Settings,
+  LayoutDashboard,
+  UserRound,
+  Users,
+  Info,
+} from "lucide-vue-next";
 import { useEventStore } from "../../stores/eventStore";
 import type { SharedEventItem } from "../../types/event";
 
 const MiniCalendar = defineAsyncComponent(() => import("./MiniCalendar.vue"));
+const ActivityFilterButtons = defineAsyncComponent(() =>
+  import("./ActivityFilterButtons.vue")
+);
+const router = useRouter();
 
 interface Props {
   isOpen: boolean;
@@ -25,18 +38,28 @@ const emit = defineEmits<Emits>();
 
 const eventStore = useEventStore();
 
+const showMembersPopup = ref(false);
+
+const toggleMembersPopup = () => {
+  showMembersPopup.value = !showMembersPopup.value;
+};
+
+const handleClassInfoClick = () => {
+  console.log("Class Information button clicked");
+};
+
 const upcomingEventsToList = computed(() => {
-  // Display top 5 upcoming events from the store
   return eventStore.upcomingEvents.slice(0, 5);
 });
 
 const recentEventsToList = computed(() => {
-  // Display top 5 recent events from the store
   return eventStore.recentEvents.slice(0, 5);
 });
 
 const displayedEvents = computed(() => {
-  return eventStore.activePrimaryFilter === 'Upcoming' ? upcomingEventsToList.value : recentEventsToList.value;
+  return eventStore.activePrimaryFilter === "Upcoming"
+    ? upcomingEventsToList.value
+    : recentEventsToList.value;
 });
 
 const handleMiniDateSelect = (date: Date) => {
@@ -55,7 +78,7 @@ const handleToggleSidebar = () => {
   emit("toggle");
 };
 
-const selectActivityFilter = (filter: 'Upcoming' | 'Recent') => {
+const selectActivityFilter = (filter: "Upcoming" | "Recent") => {
   eventStore.setActivePrimaryFilter(filter);
 };
 </script>
@@ -63,15 +86,64 @@ const selectActivityFilter = (filter: 'Upcoming' | 'Recent') => {
 <template>
   <div :class="['sidebar', { 'sidebar-open': isOpen }]">
     <div class="sidebar-content">
-      <!-- Sidebar Header -->
       <div class="sidebar-header">
-        <h2 class="sidebar-title">Calendar</h2>
-        <button @click="handleToggleSidebar" class="sidebar-toggle-x-btn">
-          <X :size="20" />
-        </button>
+        <div class="sidebar-upper">
+          <h2 class="sidebar-title" @click="router.push('/')">Clace</h2>
+          <button @click="handleToggleSidebar" class="sidebar-toggle-x-btn">
+            <X :size="20" />
+          </button>
+        </div>
+        <div class="sidebar-lower">
+          <div class="sidebar-nav">
+            <button
+              class="nav-button"
+              title="Dashboard"
+              @click="router.push('/dashboard')"
+            >
+              <LayoutDashboard :size="18" />
+            </button>
+            <button
+              class="nav-button"
+              title="Calendar"
+              @click="router.push('/calendar')"
+            >
+              <CalendarDays :size="20" />
+            </button>
+            <button class="nav-button" title="Settings">
+              <Settings :size="20" />
+            </button>
+            <button
+              class="nav-button"
+              title="Profile"
+              @click="router.push('/profile')"
+            >
+              <UserRound :size="20" />
+            </button>
+            <button
+              class="nav-button"
+              @click="toggleMembersPopup"
+              title="Class Members"
+            >
+              <Users :size="20" />
+            </button>
+            <button
+              class="nav-button"
+              @click="handleClassInfoClick"
+              title="Class Information"
+            >
+              <Info :size="20" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      <!-- Mini Calendar -->
+      <teleport to="body">
+        <div v-if="showMembersPopup" class="members-popup">
+          <h3>Class Members</h3>
+          <p>List of class members will go here.</p>
+        </div>
+      </teleport>
+
       <div class="mini-calendar-section">
         <MiniCalendar
           :current-date="props.currentDateForMiniCalendar"
@@ -81,22 +153,11 @@ const selectActivityFilter = (filter: 'Upcoming' | 'Recent') => {
         />
       </div>
 
-      <!-- Activity Events Section -->
       <div class="activity-events-section">
-        <div class="primary-filter-group">
-          <button
-            :class="['primary-filter-button', { active: eventStore.activePrimaryFilter === 'Upcoming' }]"
-            @click="selectActivityFilter('Upcoming')"
-          >
-            Upcoming
-          </button>
-          <button
-            :class="['primary-filter-button', { active: eventStore.activePrimaryFilter === 'Recent' }]"
-            @click="selectActivityFilter('Recent')"
-          >
-            Recent
-          </button>
-        </div>
+        <ActivityFilterButtons
+          :activePrimaryFilter="eventStore.activePrimaryFilter"
+          @selectActivityFilter="selectActivityFilter"
+        />
         <div class="events-list">
           <div
             v-for="event in displayedEvents"
@@ -149,116 +210,438 @@ const selectActivityFilter = (filter: 'Upcoming' | 'Recent') => {
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  overflow-y: auto;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar.sidebar-open {
   transform: translateX(0);
 }
 
-.sidebar::-webkit-scrollbar { width: 6px; }
-.sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.3); border-radius: 10px; transition: all 0.2s; }
-.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(102, 126, 234, 0.5); }
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
 
-.sidebar-content { padding: 2rem 1.5rem; height: 100%; display: flex; flex-direction: column; gap: 2rem; position: relative; }
-.sidebar-content::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: inherit; pointer-events: none; z-index: -1; }
+.sidebar-content {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
 
-.sidebar-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid rgba(102, 126, 234, 0.2); }
-.sidebar-title { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+.sidebar-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+}
 
-.sidebar-toggle-x-btn { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; color: #4c1d95; padding: 0.5rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden; }
-.sidebar-toggle-x-btn:hover { background: rgba(255, 255, 255, 0.3); color: #3730a3; border-color: rgba(255, 255, 255, 0.5); transform: translateY(-2px); box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15); }
-.sidebar-toggle-x-btn::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent); transition: left 0.5s; }
-.sidebar-toggle-x-btn:hover::before { left: 100%; }
+.sidebar-header {
+  display: flex;
+  align-items: center;
+}
 
-.mini-calendar-section { flex-shrink: 0; }
+.members-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  padding: 1rem;
+  z-index: 1001;
+  width: 90%;
+  max-width: 400px;
+  color: #4c1d95;
+}
 
-.activity-events-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.members-popup h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #7c3aed;
+  margin-bottom: 0.75rem;
+}
+
+.members-popup p {
+  font-size: 0.9rem;
+  color: #6366f1;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+  gap: 1rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: #4c1d95;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #3730a3;
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
+}
+
+.nav-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.nav-button:hover::before {
+  left: 100%;
+}
+
+.sidebar-lower {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sidebar-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6366f1;
+}
+
+@media (max-width: 480px) {
+  .nav-button {
+    padding: 0.4rem;
+  }
+  .sidebar-nav {
+    gap: 0.5rem;
+  }
+  .sidebar-description {
+    font-size: 0.75rem;
+  }
+}
+
+.sidebar-upper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-upper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.sidebar-lower {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  cursor: pointer;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-toggle-x-btn {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: #4c1d95;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-toggle-x-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #3730a3;
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-toggle-x-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.sidebar-toggle-x-btn:hover::before {
+  left: 100%;
+}
+
+.mini-calendar-section {
+  flex-shrink: 0;
+}
+
+.activity-events-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
 .primary-filter-group {
   display: flex;
   gap: 0.5rem;
-  background: rgba(236, 239, 241, 0.8); /* Light gray, slightly transparent */
-  border-radius: 0.75rem; /* Rounded corners for the group */
-  padding: 0.375rem; /* Padding inside the group */
-  margin-bottom: 1rem; /* Space below the filter group */
-  border: 1px solid rgba(102, 126, 234, 0.2); /* Subtle border */
+  background: rgba(236, 239, 241, 0.8);
+  border-radius: 0.75rem;
+  padding: 0.375rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
-.primary-filter-button {
-  padding: 0.5rem 0.75rem; /* Padding inside buttons */
-  border: none;
-  border-radius: 0.5rem; /* Rounded corners for buttons */
-  background-color: transparent;
-  color: #4c1d95; /* Default text color */
+.events-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #667eea transparent;
+  padding-right: 0.5rem;
+  flex-grow: 1;
+}
+.events-list::-webkit-scrollbar {
+  width: 4px;
+}
+.events-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.events-list::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+}
+.events-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.event-item:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
+}
+.event-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.event-item:hover::before {
+  opacity: 1;
+}
+
+.event-color-indicator {
+  width: 4px;
+  height: 100%;
+  min-height: 40px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+.event-details {
+  flex: 1;
+  min-width: 0;
+}
+.event-title {
   font-size: 0.875rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  flex-grow: 1; /* Make buttons take equal space */
+  color: #4c1d95;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+.event-time {
+  font-size: 0.75rem;
+  color: #6366f1;
+  margin-bottom: 0.25rem;
+}
+.event-course {
+  font-size: 0.75rem;
+  color: #7c3aed;
+  font-weight: 500;
+}
+.no-events {
   text-align: center;
+  color: #6366f1;
+  font-size: 0.875rem;
+  padding: 2rem 1rem;
 }
-
-.primary-filter-button:hover {
-  background-color: rgba(102, 126, 234, 0.1); /* Light purple on hover */
-  color: #3730a3; /* Darker purple text on hover */
-}
-
-.primary-filter-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient for active */
-  color: #ffffff; /* White text for active */
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); /* Subtle shadow for active */
-}
-
-.events-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; padding-right: 0.5rem; flex-grow: 1; }
-.events-list::-webkit-scrollbar { width: 4px; }
-.events-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-.events-list::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.3); border-radius: 10px; }
-.events-list::-webkit-scrollbar-thumb:hover { background: rgba(102, 126, 234, 0.5); }
-
-.event-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden; }
-.event-item:hover { background: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-2px); box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15); }
-.event-item::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: inherit; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.event-item:hover::before { opacity: 1; }
-
-.event-color-indicator { width: 4px; height: 100%; min-height: 40px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
-.event-details { flex: 1; min-width: 0; }
-.event-title { font-size: 0.875rem; font-weight: 600; color: #4c1d95; margin-bottom: 0.25rem; line-height: 1.2; }
-.event-time { font-size: 0.75rem; color: #6366f1; margin-bottom: 0.25rem; }
-.event-course { font-size: 0.75rem; color: #7c3aed; font-weight: 500; }
-.no-events { text-align: center; color: #6366f1; font-size: 0.875rem; padding: 2rem 1rem; }
 
 @media (max-width: 768px) {
-  .sidebar { width: 300px; }
-  .sidebar-content { padding: 1.5rem 1rem; gap: 1.5rem; }
-  .events-list { max-height: 250px; }
+  .sidebar {
+    width: 300px;
+  }
+  .sidebar-content {
+    padding: 0.8rem;
+    gap: 1rem;
+  }
+  .events-list {
+    max-height: 250px;
+  }
 }
 
 @media (max-width: 480px) {
-  .sidebar { width: 240px; }
-  .sidebar-content { padding: 1rem 0.75rem; gap: 1rem; }
-  .events-list { max-height: 200px; }
-  .event-item { padding: 0.5rem; gap: 0.5rem; }
-  .event-title { font-size: 0.8rem; }
-  .event-time, .event-course { font-size: 0.7rem; }
-  .primary-filter-button { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
-}
+  .sidebar {
+    width: 240px;
+  }
+  .sidebar-content {
+    padding: 0.8rem 0.6rem;
+    gap: 0.8rem;
+  }
+  .events-list {
+    max-height: 200px;
+  }
+  .event-item {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+  .event-title {
+   font-size: 0.9rem;
+  }
+  .event-time, .event-course {
+   font-size: 0.7rem;
+  }
+ }
 
-@media (max-height: 700px) {
-  .sidebar-content { padding: 1rem 0.75rem; gap: 1rem; }
-  .events-list { max-height: 200px; }
+ @media (max-height: 700px) {
+  .sidebar-content {
+    padding: 0.8rem 0.6rem;
+    gap: 0.8rem;
+  }
+  .events-list {
+    max-height: 200px;
+  }
 }
 
 @media (max-height: 600px) {
-  .sidebar { width: 200px; }
-  .sidebar-content { padding: 0.5rem 0.375rem; gap: 0.5rem; }
-  .sidebar-title { font-size: 1rem; }
-  .events-list { max-height: 100px; }
-  .event-item { padding: 0.25rem 0.375rem; gap: 0.25rem; }
-  .event-title { font-size: 0.625rem; }
-  .event-time, .event-course { font-size: 0.5rem; }
-  .primary-filter-button { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
-}
+  .sidebar {
+    width: 200px;
+  }
+  .sidebar-content {
+    padding: 0.4rem 0.3rem;
+    gap: 0.4rem;
+  }
+  .sidebar-title {
+    font-size: 1rem;
+  }
+  .events-list {
+    max-height: 100px;
+  }
+  .event-item {
+    padding: 0.25rem 0.375rem;
+    gap: 0.25rem;
+  }
+  .event-title {
+   font-size: 0.9rem;
+  }
+  .event-time, .event-course {
+   font-size: 0.7rem;
+  }
+ }
 </style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import ActivityFilterButtons from '../Calendar/ActivityFilterButtons.vue';
 interface Props {
   secondaryCounts: Record<string, number>;
   activePrimaryFilter: 'Upcoming' | 'Recent';
@@ -10,11 +11,6 @@ const props = defineProps<Props>();
 const emit = defineEmits(['primary-filter-changed', 'secondary-filter-changed']);
 
 type SecondaryFilterValue = 'All' | 'Today' | 'NextWeek' | 'NextMonth' | 'EarlierToday' | 'PastWeek' | 'PastMonth';
-
-const primaryFilters = [
-  { label: 'Upcoming Activities', value: 'Upcoming' as const },
-  { label: 'Recent Activities', value: 'Recent' as const },
-];
 
 const currentSecondaryFilters = computed(() => {
   if (props.activePrimaryFilter === 'Upcoming') {
@@ -45,17 +41,10 @@ function selectSecondaryFilter(filterValue: SecondaryFilterValue) {
 
 <template>
   <div class="combined-filters-container">
-    <div class="primary-filter-group">
-      <button
-        v-for="pFilter in primaryFilters"
-        :key="pFilter.value"
-        :class="{ active: activePrimaryFilter === pFilter.value }"
-        @click="selectPrimaryFilter(pFilter.value)"
-        class="primary-filter-button"
-      >
-        {{ pFilter.label }}
-      </button>
-    </div>
+    <ActivityFilterButtons
+      :activePrimaryFilter="activePrimaryFilter"
+      @selectActivityFilter="selectPrimaryFilter"
+    />
 
     <div class="secondary-filter-tabs">
       <button
@@ -223,39 +212,75 @@ function selectSecondaryFilter(filterValue: SecondaryFilterValue) {
 
 .primary-filter-group {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(15px);
   border-radius: 1rem;
-  padding: 0.5rem;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  align-self: flex-start;
 }
 
 .primary-filter-button {
   padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 0.75rem;
-  border: 2px solid transparent;
-  background-color: transparent;
+  border: 2px solid rgba(79, 70, 229, 0.2);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
   color: #4f46e5;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
   flex-grow: 1;
   text-align: center;
 }
 
+.primary-filter-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s ease;
+}
+.primary-filter-button:hover::before {
+  left: 100%;
+}
+
 .primary-filter-button:hover {
-  background-color: rgba(79, 70, 229, 0.1);
+  border-color: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
 }
 
 .primary-filter-button.active {
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3), 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+
+.primary-filter-button.active:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.4),
+    0 6px 16px rgba(124, 58, 237, 0.3);
+}
+
+.primary-filter-button.active:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.4),
+    0 6px 16px rgba(124, 58, 237, 0.3);
 }
 
 .secondary-filter-tabs {
