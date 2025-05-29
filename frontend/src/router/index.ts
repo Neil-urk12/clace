@@ -23,8 +23,14 @@ const router = createRouter({
           path: "/calendar",
           name: "calendar",
           component: () => import("../views/CalendarView.vue"),
+          // component: () => import("../components/Calendar/CalendarDemo.vue"),
           // component: () =>
           //   import("../components/Calendar/MobileCalendarDemo.vue"),
+        },
+        {
+          path: "/profile",
+          name: "profile",
+          component: () => import("../views/ProfileView.vue"),
         },
       ],
     },

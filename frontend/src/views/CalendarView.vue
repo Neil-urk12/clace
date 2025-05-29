@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from "vue";
 import {
   ChevronLeft,
   ChevronRight,
   Plus,
   Calendar as CalendarIcon,
+
+
   List,
   Grid3x3,
   Menu,
-  X,
 } from "lucide-vue-next";
-import CalendarGrid from "../components/Calendar/CalendarGrid.vue";
-import EventModal from "../components/Calendar/EventModal.vue";
-import MiniCalendar from "../components/Calendar/MiniCalendar.vue";
-import { useEventStore } from "../stores/eventStore";
+const CalendarGrid = defineAsyncComponent(() => import("../components/Calendar/CalendarGrid.vue"));
+const EventModal = defineAsyncComponent(() => import("../components/Calendar/EventModal.vue"));
+const CalendarSidebar = defineAsyncComponent(() => import("../components/Calendar/CalendarSidebar.vue"));import { useEventStore } from "../stores/eventStore";
 import type { SharedEventItem } from "../types/event";
 
 const eventStore = useEventStore();
@@ -29,22 +29,6 @@ const sidebarOpen = ref(false);
 
 const eventsFromStore = computed(() => eventStore.allEvents);
 
-const upcomingEvents = computed(() => {
-  const today = new Date();
-  const nextWeek = new Date();
-  nextWeek.setDate(today.getDate() + 7);
-
-  return eventsFromStore.value
-    .filter((event) => {
-      const eventDate = new Date(event.startDate);
-      return eventDate >= today && eventDate <= nextWeek;
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-    )
-    .slice(0, 5);
-});
 
 const currentMonth = computed(() =>
   currentDate.value.toLocaleDateString("en-US", {
@@ -165,64 +149,15 @@ onUnmounted(() => {
 <template>
   <div class="calendar-view">
     <!-- Sidebar -->
-    <div :class="['sidebar', { 'sidebar-open': sidebarOpen }]">
-      <div class="sidebar-content">
-        <!-- Sidebar Header -->
-        <div class="sidebar-header">
-          <h2 class="sidebar-title">Calendar</h2>
-          <button @click="toggleSidebar" class="sidebar-toggle">
-            <X :size="20" />
-          </button>
-        </div>
-
-        <!-- Mini Calendar -->
-        <div class="mini-calendar-section">
-          <MiniCalendar
-            :current-date="currentDate"
-            :events="eventsFromStore"
-            @date-select="handleMiniCalendarDateSelect"
-            @month-change="handleMiniCalendarMonthChange"
-          />
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="upcoming-events-section">
-          <h3 class="section-title">Upcoming Events</h3>
-          <div class="events-list">
-            <div
-              v-for="event in upcomingEvents"
-              :key="event.id"
-              :class="['event-item', `event-${event.type?.toLowerCase()}`]"
-              @click="handleEventClick(event)"
-            >
-              <div
-                class="event-color"
-                :style="{ backgroundColor: event.color || '#3b82f6' }"
-              ></div>
-              <div class="event-details">
-                <div class="event-title">{{ event.title }}</div>
-                <div class="event-time">
-                  {{
-                    event.allDay
-                      ? "All day"
-                      : new Date(event.startDate).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                  }}
-                </div>
-                <div v-if="event.course" class="event-course">
-                  {{ event.course }}
-                </div>
-              </div>
-            </div>
-            <div v-if="upcomingEvents.length === 0" class="no-events">
-              No upcoming events
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CalendarSidebar
+      :is-open="sidebarOpen"
+      :current-date-for-mini-calendar="currentDate"
+      :all-events-for-mini-calendar="eventsFromStore"
+      @toggle="toggleSidebar"
+      @mini-calendar-date-select="handleMiniCalendarDateSelect"
+      @mini-calendar-month-change="handleMiniCalendarMonthChange"
+      @list-event-click="handleEventClick"
+    />
 
     <!-- Sidebar Overlay (mobile) -->
     <div
@@ -352,265 +287,6 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 320px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
-  border-radius: 10px;
-  transition: all 0.2s;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
-}
-
-.sidebar.sidebar-open {
-  transform: translateX(0);
-}
-
-.sidebar-content {
-  padding: 2rem 1.5rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  position: relative;
-}
-
-.sidebar-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
-}
-
-.sidebar-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar-toggle {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  color: #4c1d95;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.sidebar-toggle:hover {
-  background: rgba(255, 255, 255, 0.3);
-  color: #3730a3;
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
-}
-
-.sidebar-toggle::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.sidebar-toggle:hover::before {
-  left: 100%;
-}
-
-.mini-calendar-section {
-  flex-shrink: 0;
-}
-
-.upcoming-events-section {
-  flex: 1;
-  overflow: hidden;
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0 0 1rem 0;
-}
-
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.events-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.events-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-.events-list::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
-  border-radius: 10px;
-}
-
-.events-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
-}
-
-.event-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.event-item:hover {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
-}
-
-.event-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.event-item:hover::before {
-  opacity: 1;
-}
-
-.event-color {
-  width: 4px;
-  height: 100%;
-  min-height: 40px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.event-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.event-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4c1d95;
-  margin-bottom: 0.25rem;
-  line-height: 1.2;
-}
-
-.event-time {
-  font-size: 0.75rem;
-  color: #6366f1;
-  margin-bottom: 0.25rem;
-}
-
-.event-course {
-  font-size: 0.75rem;
-  color: #7c3aed;
-  font-weight: 500;
-}
-
-.no-events {
-  text-align: center;
-  color: #6366f1;
-  font-size: 0.875rem;
-  padding: 2rem 1rem;
-}
 
 .sidebar-overlay {
   position: fixed;
