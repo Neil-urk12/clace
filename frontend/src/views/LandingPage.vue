@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import BaseButton from "@/components/Global/BaseButton.vue";
 import FeaturesSection from "@/components/MainLayout/LandingPage/FeaturesSection.vue";
 import FaqSection from "@/components/MainLayout/LandingPage/FaqSection.vue";
+import AnimatedCalendar from "@/components/Calendar/AnimatedCalendar.vue";
 
 const router = useRouter();
 
@@ -43,7 +44,7 @@ const steps = ref([
   },
 ]);
 
-const activeFaqIndex = ref<number | null>(null);
+// const activeFaqIndex = ref<number | null>(null);
 
 const animatedSections = ref<HTMLElement[]>([]);
 onMounted(() => {
@@ -108,7 +109,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="hero-image">
-        <img src="@/assets/calendar-preview.svg" alt="Calendar Preview" />
+        <AnimatedCalendar />
       </div>
     </section>
 
@@ -141,7 +142,7 @@ onMounted(() => {
     <section class="cta animated-section">
       <div class="cta-content">
         <h2>Ready to transform your school scheduling?</h2>
-        <p>Join thousands of educational institutions already using ClassCal</p>
+        <p>Join thousands of educational institutions already using Clace</p>
         <BaseButton
           design="primary"
           size="large"
@@ -154,7 +155,7 @@ onMounted(() => {
     <footer id="contact" class="footer animated-section">
       <div class="footer-grid">
         <div class="footer-col">
-          <h3>ClassCal</h3>
+          <h3>Clace</h3>
           <p>
             Making educational scheduling simple, efficient, and collaborative.
           </p>
@@ -186,7 +187,7 @@ onMounted(() => {
       </div>
       <div class="footer-bottom">
         <p>
-          &copy; {{ new Date().getFullYear() }} ClassCal. All rights reserved.
+          &copy; {{ new Date().getFullYear() }} Clace. All rights reserved.
         </p>
         <div class="footer-links">
           <a href="#">Privacy Policy</a>
