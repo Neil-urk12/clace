@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
-import { useRouter } from "vue-router";
+import { defineAsyncComponent, computed  } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { LayoutDashboard, UserRound } from "lucide-vue-next";
 
 const router = useRouter();
 const SearchBar = defineAsyncComponent(() => import("@/components/Global/SearchBar.vue"));
 const CalendarIcon = defineAsyncComponent(() => import("../Global/EmptyCalendarIcon.vue"));
-const ProfileIcon = defineAsyncComponent(() => import("../Global/ProfileIcon.vue"));
 
 const handleSearch = (query: string) => {
   console.log("Searching for:", query);
 };
+const hiddenRoutes: string[] = ["/profile"];
+
+const isProfileRoute = computed(() => {
+  return useRoute().path === "/profile";
+});
+
+function isHiddenRoute(): boolean {
+  const route = useRoute().path;
+  return hiddenRoutes.includes(route);
+}
 </script>
 
 <template>
@@ -22,13 +32,23 @@ const handleSearch = (query: string) => {
         </div>
         
         <div class="icon-group">
-          <SearchBar @search="handleSearch" />
+          <SearchBar v-if="!isHiddenRoute" @search="handleSearch" />
+          
+          <button
+            v-if="isProfileRoute"
+            class="action-button"
+            aria-label="Dashboard"
+            @click="router.push('/dashboard')"
+          >
+            <LayoutDashboard :size="20" />
+          </button>
+
           <button class="action-button" aria-label="Calendar" @click="router.push('/calendar')">
             <CalendarIcon />
           </button>
-          <button class="action-button" aria-label="Profile" @click="router.push('/profile')">
-            <ProfileIcon />
-          </button>
+        <button class="action-button" aria-label="Profile" @click="router.push('/profile')">
+          <UserRound :size="20" />
+        </button>
         </div>
       </div>
 
