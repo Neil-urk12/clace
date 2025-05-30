@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const eventStyle = computed(() => {
-  const baseColor = props.event.color
+  const baseColor = props.event.color || '#3b82f6'
   const colorMap: Record<string, { bg: string; border: string; shadow: string }> = {
     '#3b82f6': { 
       bg: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)', 
@@ -75,6 +75,10 @@ const formattedTime = computed(() => {
     minute: '2-digit',
     hour12: true
   })
+  
+  if (!props.event.endDate) {
+    return start
+  }
   
   const end = props.event.endDate.toLocaleTimeString('en-US', {
     hour: 'numeric',

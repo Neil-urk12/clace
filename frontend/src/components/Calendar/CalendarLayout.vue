@@ -16,7 +16,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  events: () => [],
+  events: () => [] as SharedEventItem[],
   view: "month",
 });
 
@@ -171,7 +171,8 @@ const filteredEvents = computed(() => {
       <CalendarGrid
         :current-date="currentDate"
         :events="filteredEvents"
-        :view-mode="view"
+        :view-mode="props.view"
+        :highlighted-date="selectedDate"
         @event-click="handleEventClick"
         @date-click="handleDateClick"
       />

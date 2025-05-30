@@ -44,8 +44,6 @@ const steps = ref([
   },
 ]);
 
-// const activeFaqIndex = ref<number | null>(null);
-
 const animatedSections = ref<HTMLElement[]>([]);
 onMounted(() => {
   animatedSections.value = Array.from(
@@ -97,7 +95,7 @@ onMounted(() => {
       <div class="hero-content">
         <h1>Simplify School Scheduling</h1>
         <p>
-          The all-in-one calendar solution designed for educational institutions
+          The all-in-one calendar solution designed for classrooms and educational institutions
         </p>
         <div class="cta-buttons">
           <BaseButton
@@ -142,7 +140,7 @@ onMounted(() => {
     <section class="cta animated-section">
       <div class="cta-content">
         <h2>Ready to transform your school scheduling?</h2>
-        <p>Join thousands of educational institutions already using Clace</p>
+        <p>Join students who improved their time scheduling and management by using Clace</p>
         <BaseButton
           design="primary"
           size="large"
