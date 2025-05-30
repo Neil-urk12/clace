@@ -1,26 +1,147 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, reactive, defineAsyncComponent } from 'vue'
+import { useProfileStore } from '@/stores/profileStore'
+import { storeToRefs } from 'pinia'
 
-const user = ref({
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: '/api/placeholder/150/150',
-  role: 'Student',
-  joinDate: 'January 2024'
+const BaseModal = defineAsyncComponent(() => import('@/components/BaseModal.vue'))
+
+// Initialize profile store
+const profileStore = useProfileStore()
+
+// Use storeToRefs to maintain reactivity when destructuring
+const { user, preferences, isLoading, error } = storeToRefs(profileStore)
+
+// Computed properties
+const isNotificationsEnabled = computed(() => preferences.value.notifications)
+const isDarkModeEnabled = computed(() => preferences.value.darkMode)
+
+// Check if personal info has changed
+const hasPersonalInfoChanges = computed(() => {
+  return user.value && (
+    editableUserData.name !== user.value.name ||
+    editableUserData.email !== user.value.email ||
+    editableUserData.role !== user.value.role
+  )
 })
 
-const preferences = ref({
-  notifications: true,
-  darkMode: false,
-  language: 'English'
+// Check if password form is empty
+const isPasswordFormEmpty = computed(() => {
+  return !passwordData.currentPassword && !passwordData.newPassword && !passwordData.confirmPassword
 })
 
-const toggleNotifications = () => {
-  preferences.value.notifications = !preferences.value.notifications
+// Modal states
+const isPersonalInfoModalOpen = ref(false)
+const isPasswordModalOpen = ref(false)
+
+// Form data
+const editableUserData = reactive({
+  name: '',
+  email: '',
+  role: ''
+})
+
+const passwordData = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const passwordError = ref('')
+
+// Methods
+const toggleNotifications = async () => {
+  await profileStore.toggleNotifications()
 }
 
-const toggleDarkMode = () => {
-  preferences.value.darkMode = !preferences.value.darkMode
+const toggleDarkMode = async () => {
+  await profileStore.toggleDarkMode()
+}
+
+const changeLanguage = async (language: string) => {
+  await profileStore.changeLanguage(language)
+}
+
+const openPasswordModal = () => {
+  // Reset form data
+  passwordData.currentPassword = ''
+  passwordData.newPassword = ''
+  passwordData.confirmPassword = ''
+  passwordError.value = ''
+  isPasswordModalOpen.value = true
+}
+
+const closePasswordModal = () => {
+  isPasswordModalOpen.value = false
+  passwordError.value = ''
+}
+
+const savePassword = async () => {
+  // Validate passwords
+  if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+    passwordError.value = 'All fields are required'
+    return
+  }
+  
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    passwordError.value = 'New passwords do not match'
+    return
+  }
+  
+  if (passwordData.newPassword.length < 8) {
+    passwordError.value = 'Password must be at least 8 characters long'
+    return
+  }
+  
+  try {
+    const success = await profileStore.updatePassword(
+      passwordData.currentPassword,
+      passwordData.newPassword
+    )
+    
+    if (success) {
+      closePasswordModal()
+    }
+  } catch (err) {
+    passwordError.value = err instanceof Error ? err.message : 'Failed to update password'
+  }
+}
+
+const openPersonalInfoModal = () => {
+  // Copy current user data to editable form
+  editableUserData.name = user.value.name
+  editableUserData.email = user.value.email
+  editableUserData.role = user.value.role
+  isPersonalInfoModalOpen.value = true
+}
+
+const closePersonalInfoModal = () => {
+  isPersonalInfoModalOpen.value = false
+}
+
+const savePersonalInfo = async () => {
+  try {
+    await profileStore.updateUserProfile({
+      name: editableUserData.name,
+      email: editableUserData.email,
+      role: editableUserData.role
+    })
+    closePersonalInfoModal()
+  } catch (err) {
+    console.error('Failed to update profile:', err)
+  }
+}
+
+const handleSignOut = async () => {
+  const success = await profileStore.signOut()
+  if (success) {
+    // In a real app, this would redirect to login page
+    console.log('User signed out successfully')
+  }
+}
+
+const handleAvatarChange = async () => {
+  // In a real implementation, this would open a file picker
+  console.log('Avatar change functionality would be implemented here')
 }
 </script>
 
@@ -33,7 +154,7 @@ const toggleDarkMode = () => {
           <div class="avatar-section">
             <div class="avatar-wrapper">
               <img :src="user.avatar" :alt="user.name" class="avatar" />
-              <button class="edit-avatar-btn" title="Change profile picture">
+              <button @click="handleAvatarChange" class="edit-avatar-btn" title="Change profile picture">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
                 </svg>
@@ -68,7 +189,7 @@ const toggleDarkMode = () => {
               <h3>Personal Information</h3>
               <p>Update your name, email, and other details</p>
             </div>
-            <button class="setting-action">
+            <button @click="openPersonalInfoModal" class="setting-action">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18l6-6-6-6"/>
               </svg>
@@ -80,7 +201,7 @@ const toggleDarkMode = () => {
               <h3>Password</h3>
               <p>Change your password</p>
             </div>
-            <button class="setting-action">
+            <button @click="openPasswordModal" class="setting-action">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18l6-6-6-6"/>
               </svg>
@@ -104,11 +225,11 @@ const toggleDarkMode = () => {
               <p>Receive email notifications about events</p>
             </div>
             <button 
-              class="toggle-switch"
-              :class="{ active: preferences.notifications }"
+              class="toggle-switch" 
+              :class="{ active: isNotificationsEnabled }" 
               @click="toggleNotifications"
               role="switch"
-              :aria-checked="preferences.notifications"
+              :aria-checked="isNotificationsEnabled"
             >
               <span class="toggle-slider"></span>
             </button>
@@ -121,10 +242,10 @@ const toggleDarkMode = () => {
             </div>
             <button 
               class="toggle-switch" 
-              :class="{ active: preferences.darkMode }"
+              :class="{ active: isDarkModeEnabled }" 
               @click="toggleDarkMode"
               role="switch"
-              :aria-checked="preferences.darkMode"
+              :aria-checked="isDarkModeEnabled"
             >
               <span class="toggle-slider"></span>
             </button>
@@ -135,7 +256,7 @@ const toggleDarkMode = () => {
               <h3>Language</h3>
               <p>{{ preferences.language }}</p>
             </div>
-            <button class="setting-action">
+            <button @click="changeLanguage('English')" class="setting-action">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18l6-6-6-6"/>
               </svg>
@@ -181,7 +302,7 @@ const toggleDarkMode = () => {
 
         <!-- Sign Out -->
         <div class="section sign-out-section">
-          <button class="sign-out-btn">
+          <button @click="handleSignOut" class="sign-out-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16,17 21,12 16,7"/>
@@ -192,6 +313,92 @@ const toggleDarkMode = () => {
         </div>
       </div>
     </div>
+
+    <!-- Password Modal -->
+    <BaseModal
+      title="Change Password"
+      :is-open="isPasswordModalOpen"
+      :loading="isLoading"
+      :error-message="passwordError"
+      primary-button-text="Change Password"
+      :disable-primary="isPasswordFormEmpty"
+      @close="closePasswordModal"
+      @submit="savePassword"
+    >
+      <div class="form-group">
+        <label for="current-password">Current Password</label>
+        <input 
+          id="current-password" 
+          type="password" 
+          v-model="passwordData.currentPassword" 
+          class="form-input"
+          placeholder="Enter your current password"
+        />
+      </div>
+      <div class="form-group">
+        <label for="new-password">New Password</label>
+        <input 
+          id="new-password" 
+          type="password" 
+          v-model="passwordData.newPassword" 
+          class="form-input"
+          placeholder="Enter your new password"
+        />
+      </div>
+      <div class="form-group">
+        <label for="confirm-password">Confirm New Password</label>
+        <input 
+          id="confirm-password" 
+          type="password" 
+          v-model="passwordData.confirmPassword" 
+          class="form-input"
+          placeholder="Confirm your new password"
+        />
+      </div>
+    </BaseModal>
+    
+    <!-- Personal Information Modal -->
+    <BaseModal
+      title="Edit Personal Information"
+      :is-open="isPersonalInfoModalOpen"
+      :loading="isLoading"
+      primary-button-text="Save Changes"
+      :disable-primary="!hasPersonalInfoChanges"
+      @close="closePersonalInfoModal"
+      @submit="savePersonalInfo"
+    >
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input 
+          id="name" 
+          type="text" 
+          v-model="editableUserData.name" 
+          class="form-input"
+          placeholder="Your name"
+        />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          v-model="editableUserData.email" 
+          class="form-input"
+          placeholder="Your email"
+        />
+      </div>
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select 
+          id="role" 
+          v-model="editableUserData.role" 
+          class="form-input"
+        >
+          <option value="Student">Student</option>
+          <option value="Class President">Class President</option>
+        </select>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -578,5 +785,82 @@ const toggleDarkMode = () => {
   .dot-separator {
     display: none;
   }
+}
+
+/* Form Styles */
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+}
+
+.btn-primary:disabled {
+  background-color: #a5b4fc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid #ef4444;
 }
 </style>
