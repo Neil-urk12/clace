@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import EventFilterTabs from "@/components/Dashboard/EventFilterTabs.vue";
 import EventCard from "@/components/Dashboard/EventCard.vue";
 import { useEventStore } from "../stores/eventStore";
@@ -7,8 +7,14 @@ import { type SharedEventItem } from "../types/event";
 
 const eventStore = useEventStore();
 
-// We no longer need local state for filters or filtering logic,
-// as this is now managed by the Pinia store.
+// Skeleton loading state
+const loading = ref(true);
+
+onMounted(async () => {
+  // Simulate loading for demonstration, replace with real loading logic
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  loading.value = false;
+});
 
 // Use computed properties directly from the store
 const activePrimaryFilter = computed(() => eventStore.activePrimaryFilter);
@@ -28,29 +34,28 @@ const handleSecondaryFilterChange = (newFilter: string) => {
 
 <template>
   <div class="dashboard-view">
-
-    <!-- <EventFilterTabs
-      :counts="filterCounts"
-      :active-filter="activeFilter"
-      @filter-changed="handleFilterChange"
-    /> -->
     <EventFilterTabs
       :active-primary-filter="activePrimaryFilter"
       :active-secondary-filter="activeSecondaryFilter"
       :secondary-counts="secondaryFilterCounts"
       @primary-filter-changed="handlePrimaryFilterChange"
       @secondary-filter-changed="handleSecondaryFilterChange"
+      :loading="loading"
     />
-
     <div class="activity-grid">
-      <EventCard
-        v-for="activity in filteredActivities"
-        :key="activity.id"
-        :activity="activity"
-      />
-      <p v-if="filteredActivities.length === 0" class="no-activities-message">
-        No activities found for the selected filter.
-      </p>
+      <template v-if="loading">
+        <EventCard v-for="i in 3" :key="i" :loading="true" />
+      </template>
+      <template v-else>
+        <EventCard
+          v-for="activity in filteredActivities"
+          :key="activity.id"
+          :activity="activity"
+        />
+        <p v-if="filteredActivities.length === 0" class="no-activities-message">
+          No activities found for the selected filter.
+        </p>
+      </template>
     </div>
   </div>
 </template>

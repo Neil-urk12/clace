@@ -5,6 +5,7 @@ interface Props {
   secondaryCounts: Record<string, number>;
   activePrimaryFilter: 'Upcoming' | 'Recent';
   activeSecondaryFilter: string;
+  loading?: boolean;
 }
 const props = defineProps<Props>();
 
@@ -44,21 +45,29 @@ function selectSecondaryFilter(filterValue: SecondaryFilterValue) {
     <ActivityFilterButtons
       :activePrimaryFilter="activePrimaryFilter"
       @selectActivityFilter="selectPrimaryFilter"
+      :loading="loading"
     />
-
     <div class="secondary-filter-tabs">
-      <button
-        v-for="sFilter in currentSecondaryFilters"
-        :key="sFilter.value"
-        :class="{ active: activeSecondaryFilter === sFilter.value }"
-        @click="selectSecondaryFilter(sFilter.value)"
-        class="filter-tab"
-      >
-        {{ sFilter.label }}
-        <span v-if="secondaryCounts[sFilter.value] !== undefined" class="count">
-          {{ secondaryCounts[sFilter.value] }}
-        </span>
-      </button>
+      <template v-if="loading">
+        <div v-for="i in 4" :key="i" class="filter-tab skeleton-tab">
+          <span class="skeleton-box skeleton-tab-label"></span>
+          <span class="skeleton-box skeleton-tab-count"></span>
+        </div>
+      </template>
+      <template v-else>
+        <button
+          v-for="sFilter in currentSecondaryFilters"
+          :key="sFilter.value"
+          :class="{ active: activeSecondaryFilter === sFilter.value }"
+          @click="selectSecondaryFilter(sFilter.value)"
+          class="filter-tab"
+        >
+          {{ sFilter.label }}
+          <span v-if="secondaryCounts[sFilter.value] !== undefined" class="count">
+            {{ secondaryCounts[sFilter.value] }}
+          </span>
+        </button>
+      </template>
     </div>
   </div>
 </template>

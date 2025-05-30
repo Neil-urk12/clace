@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ClockIcon, MapPinIcon, CheckCircle2Icon, BookIcon } from 'lucide-vue-next';
 import type { SharedEventItem } from '@/types/event'; // Corrected import path
+import { computed } from 'vue';
 
 interface Props {
-  activity: SharedEventItem;
+  activity?: SharedEventItem;
+  loading?: boolean;
 }
 const props = defineProps<Props>();
 
@@ -21,60 +23,78 @@ const formatDate = (date: Date): string => {
 </script>
 
 <template>
-  <div class="event-card" :class="activity.type?.toLowerCase()">
-    <div class="card-image-container">
-      <img
-        v-if="activity.imageUrl"
-        :src="activity.imageUrl"
-        :alt="activity.title"
-        class="activity-image"
-      />
-      <div v-else class="activity-image-placeholder">
-        <span>{{ activity.type }}</span>
+  <div class="event-card" :class="[activity?.type?.toLowerCase(), { 'skeleton': loading }]">
+    <template v-if="loading">
+      <div class="card-image-container">
+        <div class="skeleton-box skeleton-image"></div>
       </div>
-      <div v-if="activity.type" class="image-overlay-type">
-        {{ activity.type }}
+      <div class="card-content">
+        <div class="title-status-row">
+          <div class="skeleton-box skeleton-title"></div>
+          <div class="skeleton-box skeleton-status"></div>
+        </div>
+        <div class="skeleton-box skeleton-details"></div>
+        <div class="activity-info">
+          <div class="skeleton-box skeleton-detail-item"></div>
+          <div class="skeleton-box skeleton-detail-item"></div>
+        </div>
       </div>
-    </div>
-    <div class="card-content">
-      <div class="title-status-row">
-        <h3 class="activity-title">{{ activity.title }}</h3>
-        <component
-          v-if="getStatusIcon(activity.status)"
-          :is="getStatusIcon(activity.status)"
-          class="status-icon"
-          :class="{
-            'status-icon-completed':
-              activity.status === 'Completed' ||
-              activity.status === 'Graded' ||
-              activity.status === 'Submitted',
-          }"
-          :size="20"
+    </template>
+    <template v-else>
+      <div class="card-image-container">
+        <img
+          v-if="activity?.imageUrl"
+          :src="activity.imageUrl"
+          :alt="activity.title"
+          class="activity-image"
         />
+        <div v-else class="activity-image-placeholder">
+          <span>{{ activity?.type }}</span>
+        </div>
+        <div v-if="activity?.type" class="image-overlay-type">
+          {{ activity.type }}
+        </div>
       </div>
-      <p v-if="activity.description" class="activity-details-text">
-        {{ activity.description }}
-      </p>
+      <div class="card-content">
+        <div class="title-status-row">
+          <h3 class="activity-title">{{ activity?.title }}</h3>
+          <component
+            v-if="getStatusIcon(activity?.status)"
+            :is="getStatusIcon(activity?.status)"
+            class="status-icon"
+            :class="{
+              'status-icon-completed':
+                activity?.status === 'Completed' ||
+                activity?.status === 'Graded' ||
+                activity?.status === 'Submitted',
+            }"
+            :size="20"
+          />
+        </div>
+        <p v-if="activity?.description" class="activity-details-text">
+          {{ activity.description }}
+        </p>
 
-      <div class="activity-info">
-        <div v-if="activity.location" class="detail-item">
-          <MapPinIcon :size="16" class="detail-icon" />
-          <span>{{ activity.location }}</span>
-        </div>
-        <div v-if="activity.subject" class="detail-item">
-          <BookIcon :size="16" class="detail-icon" />
-          <span>{{ activity.subject }}</span>
-        </div>
-        <div v-else-if="activity.course" class="detail-item">
-          <BookIcon :size="16" class="detail-icon" />
-          <span>{{ activity.course }}</span>
-        </div>
-        <div v-if="activity.startDate" class="detail-item">
-          <ClockIcon :size="16" class="detail-icon" />
-          <span>{{ formatDate(activity.startDate) }}</span>
+        <div class="activity-info">
+          <div v-if="activity?.location" class="detail-item">
+            <MapPinIcon :size="16" class="detail-icon" />
+            <span>{{ activity.location }}</span>
+          </div>
+          <div v-if="activity?.subject" class="detail-item">
+            <BookIcon :size="16" class="detail-icon" />
+            <span>{{ activity.subject }}</span>
+          </div>
+          <div v-else-if="activity?.course" class="detail-item">
+            <BookIcon :size="16" class="detail-icon" />
+            <span>{{ activity.course }}</span>
+          </div>
+          <div v-if="activity?.startDate" class="detail-item">
+            <ClockIcon :size="16" class="detail-icon" />
+            <span>{{ formatDate(activity.startDate) }}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -267,5 +287,56 @@ const formatDate = (date: Date): string => {
 
 .event-card.event {
   border-left: 4px solid #10b981;
+}
+
+.skeleton {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 6px;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 160px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 22px;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-status {
+  width: 32px;
+  height: 22px;
+  margin-left: 0.5rem;
+}
+
+.skeleton-details {
+  width: 90%;
+  height: 16px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-detail-item {
+  width: 60%;
+  height: 14px;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 </style>

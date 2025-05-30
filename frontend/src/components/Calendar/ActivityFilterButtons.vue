@@ -1,29 +1,40 @@
 <template>
   <div class="primary-filter-group">
-    <button
-      :class="[
-        'primary-filter-button',
-        { active: activePrimaryFilter === 'Upcoming' },
-      ]"
-      @click="selectActivityFilter('Upcoming')"
-    >
-      Upcoming
-    </button>
-    <button
-      :class="[
-        'primary-filter-button',
-        { active: activePrimaryFilter === 'Recent' },
-      ]"
-      @click="selectActivityFilter('Recent')"
-    >
-      Recent
-    </button>
+    <template v-if="loading">
+      <div class="primary-filter-button skeleton-btn">
+        <span class="skeleton-box skeleton-btn-label"></span>
+      </div>
+      <div class="primary-filter-button skeleton-btn">
+        <span class="skeleton-box skeleton-btn-label"></span>
+      </div>
+    </template>
+    <template v-else>
+      <button
+        :class="[
+          'primary-filter-button',
+          { active: activePrimaryFilter === 'Upcoming' },
+        ]"
+        @click="selectActivityFilter('Upcoming')"
+      >
+        Upcoming
+      </button>
+      <button
+        :class="[
+          'primary-filter-button',
+          { active: activePrimaryFilter === 'Recent' },
+        ]"
+        @click="selectActivityFilter('Recent')"
+      >
+        Recent
+      </button>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 interface Props {
   activePrimaryFilter: "Upcoming" | "Recent";
+  loading?: boolean;
 }
 
 defineProps<Props>();
@@ -77,5 +88,32 @@ const selectActivityFilter = (filter: "Upcoming" | "Recent") => {
   );
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.skeleton-btn {
+  pointer-events: none;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 36px;
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 6px;
+}
+
+.skeleton-btn-label {
+  width: 50px;
+  height: 18px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 </style>
