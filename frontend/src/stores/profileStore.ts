@@ -1,5 +1,6 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { defineStore } from 'pinia'
+import { profileApi } from '@/services/profileApi'
 
 export interface UserProfile {
   name: string
@@ -18,15 +19,15 @@ export interface UserPreferences {
 export const useProfileStore = defineStore('profile', () => {
   // State
   const user = ref<UserProfile>({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    avatar: '/api/placeholder/150/150',
+    name: '',
+    email: '',
+    avatar: '',
     role: 'Student',
-    joinDate: 'January 2024'
+    joinDate: ''
   })
 
   const preferences = ref<UserPreferences>({
-    notifications: true,
+    notifications: false,
     darkMode: false,
     language: 'English'
   })
@@ -39,16 +40,52 @@ export const useProfileStore = defineStore('profile', () => {
   const isDarkMode = computed(() => preferences.value.darkMode)
 
   // Actions
+  const fetchUserProfile = async () => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const profile = await profileApi.getUserProfile()
+      user.value = { ...profile }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch profile'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const fetchUserPreferences = async () => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const prefs = await profileApi.getUserPreferences()
+      preferences.value = { ...prefs }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch preferences'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Initialize store
+  const initialize = async () => {
+    await Promise.all([
+      fetchUserProfile(),
+      fetchUserPreferences()
+    ])
+  }
+
+  // Call initialize when store is created
+  onMounted(initialize)
+
   const updateUserProfile = async (updatedProfile: Partial<UserProfile>) => {
     try {
       isLoading.value = true
       error.value = null
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Update user profile
-      user.value = { ...user.value, ...updatedProfile }
+      const updatedUser = await profileApi.updateUserProfile(updatedProfile)
+      user.value = { ...updatedUser }
       
       return true
     } catch (err) {
@@ -64,11 +101,8 @@ export const useProfileStore = defineStore('profile', () => {
       isLoading.value = true
       error.value = null
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Update preferences
-      preferences.value = { ...preferences.value, ...updatedPreferences }
+      const updatedPrefs = await profileApi.updateUserPreferences(updatedPreferences)
+      preferences.value = { ...updatedPrefs }
       
       return true
     } catch (err) {
@@ -100,12 +134,8 @@ export const useProfileStore = defineStore('profile', () => {
       isLoading.value = true
       error.value = null
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Password validation would happen on the server
-      
-      return true
+      const result = await profileApi.updatePassword(currentPassword, newPassword)
+      return result
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update password'
       return false
@@ -119,12 +149,7 @@ export const useProfileStore = defineStore('profile', () => {
       isLoading.value = true
       error.value = null
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // In a real app, this would clear authentication tokens, etc.
-      
-      return true
+      return await profileApi.signOut()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to sign out'
       return false
@@ -145,6 +170,9 @@ export const useProfileStore = defineStore('profile', () => {
     isDarkMode,
     
     // Actions
+    fetchUserProfile,
+    fetchUserPreferences,
+    initialize,
     updateUserProfile,
     updateUserPreferences,
     toggleNotifications,
