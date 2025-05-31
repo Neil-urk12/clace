@@ -261,7 +261,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="css">
 .calendar-view {
   display: flex;
   height: 100vh;

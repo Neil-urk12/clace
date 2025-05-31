@@ -6,8 +6,8 @@ interface BaseButtonProps {
   design?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'icon-only' | 'gradient-primary' | 'gradient-danger';
   size?: '' | 'large';
   disabled?: boolean;
-  iconLeft?: object;
-  iconRight?: object;
+  iconLeft?: any;
+  iconRight?: any;
 }
 
 const props = withDefaults(defineProps<BaseButtonProps>(), {
