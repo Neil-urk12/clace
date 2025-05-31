@@ -5,6 +5,7 @@ import { LayoutDashboard, UserRound, LogOut } from "lucide-vue-next";
 import { useAuthStore } from "@/stores/authStore";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const SearchBar = defineAsyncComponent(() => import("@/components/Global/SearchBar.vue"));
 const CalendarIcon = defineAsyncComponent(() => import("../Global/EmptyCalendarIcon.vue"));
@@ -15,7 +16,7 @@ const handleSearch = (query: string) => {
 const hiddenRoutes: string[] = ["/profile"];
 
 const isProfileRoute = computed(() => {
-  return useRoute().path === "/profile";
+  return route.path === "/profile";
 });
 
 const hasJoinedClass = computed(() => {
@@ -23,8 +24,7 @@ const hasJoinedClass = computed(() => {
 });
 
 function isHiddenRoute(): boolean {
-  const route = useRoute().path;
-  return hiddenRoutes.includes(route);
+  return hiddenRoutes.includes(route.path);
 }
 </script>
 
