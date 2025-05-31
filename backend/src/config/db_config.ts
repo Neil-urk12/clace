@@ -6,6 +6,21 @@ const pool = createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   port: Number(process.env.DB_PORT || 3306),
+  ...(process.env.DB_SSLMODE !== 'disable' && {
+    ssl: {
+      rejectUnauthorized: true
+    }
+  }),
 });
+
+// Test database connection
+pool.getConnection()
+  .then(connection => {
+    console.log('✅ Database connected successfully');
+    connection.release();
+  })
+  .catch(error => {
+    console.error('❌ Database connection failed:', error.message);
+  });
 
 export default pool;
