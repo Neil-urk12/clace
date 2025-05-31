@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { ref, computed, reactive, defineAsyncComponent } from 'vue'
 import { useProfileStore } from '@/stores/profileStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 const BaseModal = defineAsyncComponent(() => import('@/components/BaseModal.vue'))
 
-// Initialize profile store
+// Initialize stores and router
 const profileStore = useProfileStore()
+const authStore = useAuthStore()
+const router = useRouter()
 
 // Use storeToRefs to maintain reactivity when destructuring
 const { user, preferences, isLoading, error } = storeToRefs(profileStore)
+const { isAuthenticated } = storeToRefs(authStore)
+
+// Fetch user profile on component mount if authenticated
+if (isAuthenticated.value) {
+  profileStore.fetchUserProfile()
+  profileStore.fetchUserPreferences()
+}
 
 // Computed properties
 const isNotificationsEnabled = computed(() => preferences.value.notifications)
@@ -132,10 +143,12 @@ const savePersonalInfo = async () => {
 }
 
 const handleSignOut = async () => {
-  const success = await profileStore.signOut()
-  if (success) {
-    // In a real app, this would redirect to login page
-    console.log('User signed out successfully')
+  try {
+    await profileStore.signOut() // Backend/API sign out
+    authStore.logout()           // Clear frontend state and localStorage
+    router.push('/') // Redirect to landing page
+  } catch (err) {
+    console.error('Failed to sign out:', err)
   }
 }
 
@@ -162,12 +175,15 @@ const handleAvatarChange = async () => {
             </div>
           </div>
           <div class="user-info">
-            <h1 class="user-name">{{ user.name }}</h1>
-            <p class="user-email">{{ user.email }}</p>
-            <div class="user-meta">
-              <span class="user-role">{{ user.role }}</span>
-              <span class="dot-separator">•</span>
-              <span class="join-date">Member since {{ user.joinDate }}</span>
+            <div class="user-info">
+              <h1 class="user-name">{{ user.name || 'Loading...' }}</h1>
+              <div class="user-meta">
+                <span class="user-role">{{ user.role || 'User' }}</span>
+                <span class="dot-separator">•</span>
+                <span class="join-date">{{ user.email }}</span>
+                <span class="dot-separator">•</span>
+                <span class="join-date">Member since {{ user.joinDate || 'N/A' }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -301,15 +317,26 @@ const handleAvatarChange = async () => {
         </div>
 
         <!-- Sign Out -->
-        <div class="section sign-out-section">
+        <div class="section">
           <button @click="handleSignOut" class="sign-out-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16,17 21,12 16,7"/>
+              <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             Sign Out
           </button>
+        </div>
+        
+        <!-- Loading state overlay -->
+        <div v-if="isLoading" class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <p>Loading profile data...</p>
+        </div>
+        
+        <!-- Error message -->
+        <div v-if="error" class="error-message">
+          {{ error }}
         </div>
       </div>
     </div>
@@ -785,6 +812,36 @@ const handleAvatarChange = async () => {
   .dot-separator {
     display: none;
   }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Form Styles */

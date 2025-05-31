@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import MainLayout from "../layouts/MainLayout.vue";
+import { useAuthStore } from "../stores/authStore";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,6 +54,20 @@ const router = createRouter({
     //   component: () => import('../views/AboutView.vue'),
     // },
   ],
+});
+
+// Navigation guard for protected routes
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  const protectedRoutes = ["/dashboard", "/calendar", "/profile", "/admin"];
+  const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route));
+
+  // Check if the route is protected and user is not authenticated
+  if (isProtectedRoute && !authStore.isAuthenticated) {
+    next({ name: "landing" }); // Redirect to landing page
+  } else {
+    next(); // Continue navigation
+  }
 });
 
 export default router;

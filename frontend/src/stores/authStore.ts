@@ -50,13 +50,21 @@ export const useAuthStore = defineStore('auth', {
         return false;
       }
     },
-    logout() {
-      this.isAuthenticated = false;
-      this.user = null;
-      this.token = null;
-      localStorage.removeItem('authToken');
+    async logout() {
+      try {
+        // Call the backend logout endpoint
+        await authService.logout();
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        // Always clear local state even if the backend call fails
+        this.isAuthenticated = false;
+        this.user = null;
+        this.token = null;
+        localStorage.removeItem('authToken');
+      }
     },
-    initializeAuth() {
+    async initializeAuth() {
       const storedToken = localStorage.getItem('authToken');
       if (storedToken) {
         this.token = storedToken;

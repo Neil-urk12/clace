@@ -23,6 +23,22 @@ const authService = {
     }
   },
 
+  async logout() {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const response = await axios.post(`${API_URL}/logout`, { token }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+      }
+      return { success: true };
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      // Even if the server request fails, we should still clear local auth data
+      return { success: true };
+    }
+  },
 };
 
 export default authService;
