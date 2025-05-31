@@ -129,8 +129,15 @@ const handleKeyPress = (event: KeyboardEvent) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     window.addEventListener("keydown", handleKeyPress);
+    
+    // Load events from API for production use
+    try {
+        await eventStore.loadEvents();
+    } catch (error) {
+        console.warn('Failed to load events:', error);
+    }
 });
 
 onUnmounted(() => {
