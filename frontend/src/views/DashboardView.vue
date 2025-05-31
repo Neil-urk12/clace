@@ -22,35 +22,60 @@ const calendarName = ref('');
 const calendarNameError = ref('');
 
 onMounted(async () => {
-  if (!authStore.user) {
-    await new Promise(resolve => setTimeout(resolve, 200));
+  // Initialize all states to false
+  showDashboard.value = false;
+  showClassIdForm.value = false;
+  showPresidentForm.value = false;
+  showPresidentLoading.value = false;
+  
+  // Initialize auth if needed
+  if (!authStore.isAuthenticated || !authStore.user) {
+    await authStore.initializeAuth();
+    // Wait a bit for auth to initialize if needed
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
   
+  console.log('User after initialization:', authStore.user);
+  console.log('Is class president:', authStore.user?.is_class_president);
+
   if (authStore.user) {
     // Try to load the user's calendar
     const calendarResult = await calendarStore.loadUserCalendar();
     
     if (calendarResult.success) {
-      // User has a calendar, show dashboard
+      // User has a calendar, show dashboard and load events
       authStore.setHasJoinedClass(true);
       showDashboard.value = true;
+      
+      // Load events from API for production use
+      try {
+        await eventStore.loadEvents();
+      } catch (error) {
+        console.warn('Failed to load events:', error);
+      }
     } else {
       // User doesn't have a calendar
       if (authStore.user.is_class_president) {
-        if (authStore.hasJoinedClass) {
-          showDashboard.value = true;
-        } else {
-          showPresidentForm.value = true;
-        }
+        // Class presidents should create their own calendar
+        showPresidentForm.value = true;
       } else {
+        // Regular students need to join an existing calendar
         if (authStore.hasJoinedClass) {
           showDashboard.value = true;
+          
+          // Load events from API
+          try {
+            await eventStore.loadEvents();
+          } catch (error) {
+            console.warn('Failed to load events:', error);
+          }
         } else {
           showClassIdForm.value = true;
         }
       }
     }
   } else {
+    // Not authenticated - should redirect to login, but fallback to class ID form
     showClassIdForm.value = true;
   }
   
@@ -74,6 +99,13 @@ const submitClassId = async () => {
       classIdSubmitted.value = true;
       showClassIdForm.value = false;
       showDashboard.value = true;
+      
+      // Load events from API for the joined calendar
+      try {
+        await eventStore.loadEvents();
+      } catch (error) {
+        console.warn('Failed to load events:', error);
+      }
     } else {
       throw new Error(result.message || 'Failed to join calendar');
     }
@@ -101,8 +133,15 @@ const submitCalendarName = async () => {
     if (result.success) {
       showPresidentLoading.value = false;
       showDashboard.value = true;
+      
+      // Load events from API for the newly created calendar
+      try {
+        await eventStore.loadEvents();
+      } catch (error) {
+        console.warn('Failed to load events:', error);
+      }
     } else {
-      throw new Error(result.message || 'Failed to join calendar');
+      throw new Error(result.message || 'Failed to create calendar');
     }
   } catch (error: any) {
     calendarNameError.value = error.message || 'Failed to create calendar. Please try again.';
@@ -219,9 +258,16 @@ const handleSecondaryFilterChange = (newFilter: string) => {
               endDate: activity.endDate instanceof Date ? activity.endDate : activity.endDate ? new Date(activity.endDate) : undefined
             }"
           />
-          <p v-if="filteredActivities.length === 0" class="no-activities-message">
-            No activities found for the selected filter.
-          </p>
+          <div v-if="filteredActivities.length === 0" class="no-activities-message">
+            <div class="empty-state">
+              <div class="empty-icon">📅</div>
+              <h3>No events scheduled yet</h3>
+              <p>Get started by creating your first event</p>
+              <router-link to="/calendar" class="calendar-link">
+                Go to calendar to schedule something
+              </router-link>
+            </div>
+          </div>
         </template>
       </div>
     </template>
@@ -357,14 +403,56 @@ const handleSecondaryFilterChange = (newFilter: string) => {
 
 .no-activities-message {
   text-align: center;
-  color: rgba(255, 255, 255, 0.8);
   padding: 3rem 2rem;
-  font-style: italic;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state h3 {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.empty-state p {
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1.1rem;
+  margin: 0;
+}
+
+.calendar-link {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+  margin-top: 0.5rem;
+}
+
+.calendar-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(102, 126, 234, 0.6);
+  text-decoration: none;
+  color: white;
 }
 
 @media (min-width: 768px) {

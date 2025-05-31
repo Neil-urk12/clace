@@ -39,6 +39,23 @@ const authService = {
       return { success: true };
     }
   },
+
+  async getCurrentUser() {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        return null;
+      }
+      
+      const response = await axios.get(`${API_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.user;
+    } catch (error: any) {
+      console.error('Get current user error:', error);
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 export default authService;

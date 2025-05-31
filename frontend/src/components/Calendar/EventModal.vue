@@ -65,13 +65,27 @@ const colorOptions = [
 ];
 
 const isValid = computed(() => {
-  return (
+  const hasRequiredFields = (
     formData.value.title.trim() !== "" &&
     formData.value.startDate !== "" &&
     (formData.value.allDay || formData.value.startTime !== "") &&
     formData.value.endDate !== "" &&
     (formData.value.allDay || formData.value.endTime !== "")
   );
+
+  if (!hasRequiredFields) return false;
+
+  // Validate that end date/time is after start date/time
+  const startDateTime = parseDateTime(
+    formData.value.startDate,
+    formData.value.startTime,
+  );
+  const endDateTime = parseDateTime(
+    formData.value.endDate,
+    formData.value.endTime,
+  );
+
+  return endDateTime.getTime() > startDateTime.getTime();
 });
 
 const modalTitle = computed(() => {
