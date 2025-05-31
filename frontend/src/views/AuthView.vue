@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/authStore";
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Form state
 const isLogin = ref(true);
@@ -10,10 +12,12 @@ const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const fullName = ref("");
-const role = ref("");
+const role = ref<"student" | "class-president">("student"); 
 const currentStep = ref(1);
 const rememberMe = ref(false);
 const agreeToTerms = ref(false);
+const isLoading = ref(false);
+const error = ref("");
 
 const features = [
   {
@@ -36,14 +40,40 @@ const features = [
   },
 ];
 
-const handleSubmit = (e: Event) => {
+const handleSubmit = async (e: Event) => {
   e.preventDefault();
-  router.push("/dashboard");
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    if (isLogin.value) {
+      await authStore.login({ email: email.value, password: password.value });
+    } else {
+      await authStore.register({
+        fullName: fullName.value,
+        email: email.value,
+        password: password.value,
+        role: role.value,
+      });
+    }
+    router.push("/dashboard"); // Redirect after successful login/registration
+  } catch (err: any) {
+    error.value = err.message || "An unexpected error occurred.";
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const nextStep = () => {
-  if (fullName.value && email.value && password.value && confirmPassword.value) {
+  if (password.value !== confirmPassword.value) {
+    error.value = "Passwords do not match.";
+    return;
+  }
+  if (fullName.value && email.value && password.value) {
+    error.value = "";
     currentStep.value = 2;
+  } else {
+    error.value = "Please fill in all required fields.";
   }
 };
 
@@ -58,7 +88,7 @@ const toggleAuthMode = () => {
   password.value = "";
   confirmPassword.value = "";
   fullName.value = "";
-  role.value = "";
+  role.value = "student";
   currentStep.value = 1;
   rememberMe.value = false;
   agreeToTerms.value = false;
