@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { SharedEventItem } from "../types/event";
+import { EventService } from "../services/eventService";
 
 /**
  * @typedef {'Upcoming' | 'Recent'} PrimaryFilter
@@ -482,156 +483,185 @@ export const useEventStore = defineStore("eventStore", () => {
   });
 
   /**
-   * Adds a new event to the store. A unique ID is generated for the new event.
+   * Adds a new event to the store via API and updates local state.
    * @param {Omit<import('../types/event').SharedEventItem, 'id'>} eventData - The event data without an ID.
    */
-  function addEvent(eventData: Omit<SharedEventItem, "id">) {
-    const newEvent: SharedEventItem = {
-      ...eventData,
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-    };
-    events.value.push(newEvent);
-  }
-
-  /**
-   * Updates an existing event in the store.
-   * @param {import('../types/event').SharedEventItem} updatedEvent - The updated event object.
-   */
-  function updateEvent(updatedEvent: SharedEventItem) {
-    const index = events.value.findIndex(
-      (event) => event.id === updatedEvent.id,
-    );
-    if (index !== -1) {
-      events.value[index] = updatedEvent;
+  async function addEvent(eventData: Omit<SharedEventItem, "id">) {
+    try {
+      const newEvent = await EventService.createEvent(eventData);
+      events.value.push(newEvent);
+      return newEvent;
+    } catch (error) {
+      console.error('Failed to add event:', error);
+      throw error;
     }
   }
 
   /**
-   * Deletes an event from the store by its ID.
-   * @param {string} eventId - The ID of the event to delete.
+   * Updates an existing event in the store via API and updates local state.
+   * @param {import('../types/event').SharedEventItem} updatedEvent - The updated event object.
    */
-  function deleteEvent(eventId: string) {
-    events.value = events.value.filter((event) => event.id !== eventId);
+  async function updateEvent(updatedEvent: SharedEventItem) {
+    try {
+      const updated = await EventService.updateEvent(updatedEvent);
+      const index = events.value.findIndex(
+        (event) => event.id === updatedEvent.id,
+      );
+      if (index !== -1) {
+        events.value[index] = updated;
+      }
+      return updated;
+    } catch (error) {
+      console.error('Failed to update event:', error);
+      throw error;
+    }
   }
 
   /**
-   * Loads events into the store. If `sampleEvents` are provided, they are used;
-   * otherwise, a default set of sample events is loaded.
-   * @param {import('../types/event').SharedEventItem[]} [sampleEvents] - Optional array of events to load.
+   * Deletes an event from the store by its ID via API and updates local state.
+   * @param {string} eventId - The ID of the event to delete.
    */
-  function loadEvents(sampleEvents?: SharedEventItem[]) {
-    if (sampleEvents) {
-      events.value = sampleEvents;
-    } else {
-      const now = new Date();
-      events.value = [
-        {
-          id: "sample-event-1",
-          title: "Team Sync Meeting",
-          description: "Weekly team synchronization meeting.",
-          startDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 1,
-            10,
-            0,
-          ),
-          endDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 1,
-            11,
-            0,
-          ),
-          allDay: false,
-          type: "ClassSession",
-          subject: "Project Alpha",
-          course: "CS500",
-          status: "Scheduled",
-          location: "Online Conference Room",
-          color: "#3b82f6",
-        },
-        {
-          id: "sample-event-2",
-          title: "Project Deadline",
-          description: "Final submission for Project Beta.",
-          startDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 3,
-            23,
-            59,
-          ),
-          allDay: true,
-          type: "Project",
-          subject: "Project Beta",
-          course: "CS501",
-          status: "Pending",
-          color: "#ef4444",
-        },
-        {
-          id: "sample-event-3",
-          title: "Quiz 2",
-          startDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 7,
-            14,
-            0,
-          ),
-          allDay: false,
-          type: "Quiz",
-          subject: "Data Structures",
-          course: "CS201",
-          status: "Scheduled",
-          location: "Room 101",
-          color: "#f97316",
-        },
-        {
-          id: "sample-event-4",
-          title: "Past Project Meeting",
-          description: "Discussed initial phase of Project Gamma.",
-          startDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - 2,
-            14,
-            0,
-          ),
-          endDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - 2,
-            15,
-            0,
-          ),
-          allDay: false,
-          type: "ClassSession",
-          subject: "Project Gamma",
-          course: "CS600",
-          status: "Completed",
-          location: "Online Conference Room",
-          color: "#a855f7",
-        },
-        {
-          id: "sample-event-5",
-          title: "Past Assignment Due",
-          description: "Submission for Assignment 1.",
-          startDate: new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - 10,
-            23,
-            59,
-          ),
-          allDay: true,
-          type: "Assignment",
-          subject: "Data Structures",
-          course: "CS201",
-          status: "Completed",
-          color: "#22c55e",
-        },
-      ];
+  async function deleteEvent(eventId: string) {
+    try {
+      await EventService.deleteEvent(eventId);
+      events.value = events.value.filter((event) => event.id !== eventId);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Loads events from the API or uses provided sample events.
+   * @param {import('../types/event').SharedEventItem[]} [sampleEvents] - Optional array of events to load instead of fetching from API.
+   * @param {boolean} [useSampleData=false] - Whether to use sample data instead of API.
+   */
+  async function loadEvents(sampleEvents?: SharedEventItem[], useSampleData: boolean = false) {
+    try {
+      if (sampleEvents) {
+        events.value = sampleEvents;
+      } else if (useSampleData) {
+        // Load default sample events for development/testing
+        const now = new Date();
+        events.value = [
+          {
+            id: "sample-event-1",
+            title: "Team Sync Meeting",
+            description: "Weekly team synchronization meeting.",
+            startDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 1,
+              10,
+              0,
+            ),
+            endDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 1,
+              11,
+              0,
+            ),
+            allDay: false,
+            type: "ClassSession",
+            subject: "Project Alpha",
+            course: "CS500",
+            status: "Scheduled",
+            location: "Online Conference Room",
+            color: "#3b82f6",
+          },
+          {
+            id: "sample-event-2",
+            title: "Project Deadline",
+            description: "Final submission for Project Beta.",
+            startDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 3,
+              23,
+              59,
+            ),
+            allDay: true,
+            type: "Project",
+            subject: "Project Beta",
+            course: "CS501",
+            status: "Pending",
+            color: "#ef4444",
+          },
+          {
+            id: "sample-event-3",
+            title: "Quiz 2",
+            startDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 7,
+              14,
+              0,
+            ),
+            allDay: false,
+            type: "Quiz",
+            subject: "Data Structures",
+            course: "CS201",
+            status: "Scheduled",
+            location: "Room 101",
+            color: "#f97316",
+          },
+          {
+            id: "sample-event-4",
+            title: "Past Project Meeting",
+            description: "Discussed initial phase of Project Gamma.",
+            startDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() - 2,
+              14,
+              0,
+            ),
+            endDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() - 2,
+              15,
+              0,
+            ),
+            allDay: false,
+            type: "ClassSession",
+            subject: "Project Gamma",
+            course: "CS600",
+            status: "Completed",
+            location: "Online Conference Room",
+            color: "#a855f7",
+          },
+          {
+            id: "sample-event-5",
+            title: "Past Assignment Due",
+            description: "Submission for Assignment 1.",
+            startDate: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() - 10,
+              23,
+              59,
+            ),
+            allDay: true,
+            type: "Assignment",
+            subject: "Data Structures",
+            course: "CS201",
+            status: "Completed",
+            color: "#22c55e",
+          },
+        ];
+      } else {
+        // Fetch events from API
+        const fetchedEvents = await EventService.getAllEvents();
+        events.value = fetchedEvents;
+      }
+    } catch (error) {
+      console.error('Failed to load events:', error);
+      // Fallback to empty array or show error state
+      events.value = [];
+      throw error;
     }
   }
 
@@ -668,6 +698,34 @@ export const useEventStore = defineStore("eventStore", () => {
     activeSecondaryFilter.value = filter;
   }
 
+  /**
+   * Refreshes events from the API.
+   */
+  async function refreshEvents() {
+    try {
+      const fetchedEvents = await EventService.getAllEvents();
+      events.value = fetchedEvents;
+      return fetchedEvents;
+    } catch (error) {
+      console.error('Failed to refresh events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Syncs events with external sources via API.
+   */
+  async function syncEvents() {
+    try {
+      const syncedEvents = await EventService.syncEvents();
+      events.value = syncedEvents;
+      return syncedEvents;
+    } catch (error) {
+      console.error('Failed to sync events:', error);
+      throw error;
+    }
+  }
+
   return {
     events,
     activePrimaryFilter,
@@ -689,5 +747,7 @@ export const useEventStore = defineStore("eventStore", () => {
     setSearchQuery,
     setActivePrimaryFilter,
     setActiveSecondaryFilter,
+    refreshEvents,
+    syncEvents,
   };
 });

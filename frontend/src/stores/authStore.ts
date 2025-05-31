@@ -7,6 +7,7 @@ interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
+  hasJoinedClass?: boolean;
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -14,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: false,
     user: null,
     token: null,
+    hasJoinedClass: false,
   }),
   actions: {
     async login(credentials: LoginCredentials) {
@@ -72,10 +74,18 @@ export const useAuthStore = defineStore('auth', {
     },
     async initializeAuth() {
       const storedToken = localStorage.getItem('authToken');
+      const hasJoinedClass = localStorage.getItem('hasJoinedClass') === 'true';
+      
       if (storedToken) {
         this.token = storedToken;
         this.isAuthenticated = true;
+        this.hasJoinedClass = hasJoinedClass;
       }
+    },
+    
+    setHasJoinedClass(joined: boolean) {
+      this.hasJoinedClass = joined;
+      localStorage.setItem('hasJoinedClass', joined.toString());
     },
   },
 });
