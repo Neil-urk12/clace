@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { defineAsyncComponent, computed  } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { LayoutDashboard, UserRound } from "lucide-vue-next";
+import { LayoutDashboard, UserRound, LogOut } from "lucide-vue-next";
+import { useAuthStore } from "@/stores/authStore";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const SearchBar = defineAsyncComponent(() => import("@/components/Global/SearchBar.vue"));
 const CalendarIcon = defineAsyncComponent(() => import("../Global/EmptyCalendarIcon.vue"));
 
@@ -14,6 +16,10 @@ const hiddenRoutes: string[] = ["/profile"];
 
 const isProfileRoute = computed(() => {
   return useRoute().path === "/profile";
+});
+
+const hasJoinedClass = computed(() => {
+  return authStore.hasJoinedClass;
 });
 
 function isHiddenRoute(): boolean {
@@ -43,12 +49,34 @@ function isHiddenRoute(): boolean {
             <LayoutDashboard :size="20" />
           </button>
 
-          <button class="action-button" aria-label="Calendar" @click="router.push('/calendar')">
+          <!-- Only show calendar and profile icons if user has joined a class -->
+          <button 
+            v-if="hasJoinedClass"
+            class="action-button" 
+            aria-label="Calendar" 
+            @click="router.push('/calendar')"
+          >
             <CalendarIcon />
           </button>
-        <button class="action-button" aria-label="Profile" @click="router.push('/profile')">
-          <UserRound :size="20" />
-        </button>
+          
+          <button 
+            v-if="hasJoinedClass"
+            class="action-button" 
+            aria-label="Profile" 
+            @click="router.push('/profile')"
+          >
+            <UserRound :size="20" />
+          </button>
+
+          <!-- Show sign out button if user has not joined a class -->
+          <button 
+            v-if="!hasJoinedClass && authStore.isAuthenticated"
+            class="action-button sign-out-button" 
+            aria-label="Sign Out" 
+            @click="authStore.logout().then(() => router.push('/'))"
+          >
+            <LogOut :size="20" />
+          </button>
         </div>
       </div>
 

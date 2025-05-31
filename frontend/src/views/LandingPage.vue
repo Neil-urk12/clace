@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 import BaseButton from "@/components/Global/BaseButton.vue";
 import FeaturesSection from "@/components/MainLayout/LandingPage/FeaturesSection.vue";
 import FaqSection from "@/components/MainLayout/LandingPage/FaqSection.vue";
 import AnimatedCalendar from "@/components/Calendar/AnimatedCalendar.vue";
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Navigation links
 const navLinks = ref([
@@ -79,14 +81,22 @@ onMounted(() => {
         }}</a>
       </div>
       <div class="auth-buttons">
-        <BaseButton
-          design="secondary"
-          @click="router.push('/auth')"
-        >Log In</BaseButton>
-        <BaseButton
-          design="primary"
-          @click="router.push('/auth')"
-        >Sign Up Free</BaseButton>
+        <template v-if="authStore.isAuthenticated">
+          <BaseButton
+            design="secondary"
+            @click="router.push('/dashboard')"
+          >Dashboard</BaseButton>
+        </template>
+        <template v-else>
+          <BaseButton
+            design="secondary"
+            @click="router.push('/auth')"
+          >Log In</BaseButton>
+          <BaseButton
+            design="primary"
+            @click="router.push('/auth')"
+          >Sign Up Free</BaseButton>
+        </template>
       </div>
     </nav>
 
@@ -101,9 +111,12 @@ onMounted(() => {
           <BaseButton
             design="primary"
             size="large"
-            @click="router.push('/auth')"
-          >Get Started For Free</BaseButton>
-          <BaseButton design="outline">Watch Demo</BaseButton>
+            @click="router.push(authStore.isAuthenticated ? '/dashboard' : '/auth')"
+          >{{ authStore.isAuthenticated ? 'Go to dashboard' : 'Get Started For Free' }}</BaseButton>
+          <BaseButton 
+            design="outline"
+            @click="authStore.isAuthenticated ? router.push('/calendar') : null"
+          >{{ authStore.isAuthenticated ? 'Check your calendar' : 'Watch Demo' }}</BaseButton>
         </div>
       </div>
       <div class="hero-image">
@@ -144,8 +157,8 @@ onMounted(() => {
         <BaseButton
           design="primary"
           size="large"
-          @click="router.push('/auth')"
-        >Get Started Now</BaseButton>
+          @click="router.push(authStore.isAuthenticated ? '/dashboard' : '/auth')"
+        >{{ authStore.isAuthenticated ? 'Continue' : 'Get Started Now' }}</BaseButton>
       </div>
     </section>
 
