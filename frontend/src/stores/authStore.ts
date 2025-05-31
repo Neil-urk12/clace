@@ -23,11 +23,14 @@ export const useAuthStore = defineStore('auth', {
         this.user = response.user;
         this.isAuthenticated = true;
         localStorage.setItem('authToken', response.token);
-        return true;
-      } catch (error) {
+        return { success: true };
+      } catch (error: any) {
         console.error('Login failed:', error);
         this.logout();
-        return false;
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 'Invalid email or password. Please try again.'
+        };
       }
     },
     async register(userData: RegisterPayload) {
@@ -43,11 +46,14 @@ export const useAuthStore = defineStore('auth', {
         this.user = response.user;
         this.isAuthenticated = true;
         localStorage.setItem('authToken', response.token);
-        return true;
-      } catch (error) {
+        return { success: true };
+      } catch (error: any) {
         console.error('Registration failed:', error);
         this.logout();
-        return false;
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 'Registration failed. Please try again.'
+        };
       }
     },
     async logout() {

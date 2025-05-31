@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
 
@@ -18,6 +18,39 @@ const rememberMe = ref(false);
 const agreeToTerms = ref(false);
 const isLoading = ref(false);
 const error = ref("");
+const showSuccessModal = ref(false);
+const successMessage = ref("");
+
+// Form validation
+const emailError = ref("");
+const passwordError = ref("");
+const confirmPasswordError = ref("");
+const fullNameError = ref("");
+
+// Email validation
+const isEmailValid = computed(() => {
+  if (!email.value) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.value);
+});
+
+// Password validation
+const isPasswordValid = computed(() => {
+  if (!password.value) return false;
+  return password.value.length >= 8;
+});
+
+// Password match validation
+const doPasswordsMatch = computed(() => {
+  if (!confirmPassword.value || !password.value) return false;
+  return password.value === confirmPassword.value;
+});
+
+// Full name validation
+const isFullNameValid = computed(() => {
+  if (!fullName.value) return false;
+  return fullName.value.trim().length >= 2;
+});
 
 const features = [
   {
@@ -40,23 +73,101 @@ const features = [
   },
 ];
 
+const validateForm = () => {
+  // Reset all errors
+  error.value = "";
+  emailError.value = "";
+  passwordError.value = "";
+  confirmPasswordError.value = "";
+  fullNameError.value = "";
+  
+  let isValid = true;
+  
+  // Validate email
+  if (!email.value) {
+    emailError.value = "Email is required";
+    isValid = false;
+  } else if (!isEmailValid.value) {
+    emailError.value = "Please enter a valid email address";
+    isValid = false;
+  }
+  
+  // Validate password
+  if (!password.value) {
+    passwordError.value = "Password is required";
+    isValid = false;
+  } else if (!isPasswordValid.value) {
+    passwordError.value = "Password must be at least 8 characters long";
+    isValid = false;
+  }
+  
+  // Additional validation for registration
+  if (!isLogin.value) {
+    // Validate full name for registration
+    if (!fullName.value) {
+      fullNameError.value = "Full name is required";
+      isValid = false;
+    } else if (!isFullNameValid.value) {
+      fullNameError.value = "Full name must be at least 2 characters long";
+      isValid = false;
+    }
+    
+    // Validate password confirmation for registration
+    if (!confirmPassword.value) {
+      confirmPasswordError.value = "Please confirm your password";
+      isValid = false;
+    } else if (!doPasswordsMatch.value) {
+      confirmPasswordError.value = "Passwords do not match";
+      isValid = false;
+    }
+  }
+  
+  return isValid;
+};
+
 const handleSubmit = async (e: Event) => {
   e.preventDefault();
+  
+  // Validate form before submission
+  if (!validateForm()) {
+    return;
+  }
+  
   isLoading.value = true;
   error.value = "";
 
   try {
+    // Lowercase the email before sending to backend
+    const lowercaseEmail = email.value.toLowerCase().trim();
+    
+    let result;
     if (isLogin.value) {
-      await authStore.login({ email: email.value, password: password.value });
+      result = await authStore.login({ email: lowercaseEmail, password: password.value });
     } else {
-      await authStore.register({
-        fullName: fullName.value,
-        email: email.value,
+      result = await authStore.register({
+        fullName: fullName.value.trim(),
+        email: lowercaseEmail,
         password: password.value,
         role: role.value,
       });
     }
-    router.push("/dashboard"); // Redirect after successful login/registration
+    
+    if (result.success) {
+      // Show success modal
+      successMessage.value = isLogin.value 
+        ? "Login successful! Redirecting to dashboard..." 
+        : "Account created successfully! Redirecting to dashboard...";
+      showSuccessModal.value = true;
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        showSuccessModal.value = false;
+        router.push("/dashboard");
+      }, 1500);
+    } else {
+      // Show error message
+      error.value = result.message;
+    }
   } catch (err: any) {
     error.value = err.message || "An unexpected error occurred.";
   } finally {
@@ -65,15 +176,54 @@ const handleSubmit = async (e: Event) => {
 };
 
 const nextStep = () => {
-  if (password.value !== confirmPassword.value) {
-    error.value = "Passwords do not match.";
-    return;
+  // Reset errors
+  error.value = "";
+  emailError.value = "";
+  passwordError.value = "";
+  confirmPasswordError.value = "";
+  fullNameError.value = "";
+  
+  // Validate step 1 fields
+  let isValid = true;
+  
+  // Validate full name
+  if (!fullName.value) {
+    fullNameError.value = "Full name is required";
+    isValid = false;
+  } else if (!isFullNameValid.value) {
+    fullNameError.value = "Full name must be at least 2 characters long";
+    isValid = false;
   }
-  if (fullName.value && email.value && password.value) {
-    error.value = "";
+  
+  // Validate email
+  if (!email.value) {
+    emailError.value = "Email is required";
+    isValid = false;
+  } else if (!isEmailValid.value) {
+    emailError.value = "Please enter a valid email address";
+    isValid = false;
+  }
+  
+  // Validate password
+  if (!password.value) {
+    passwordError.value = "Password is required";
+    isValid = false;
+  } else if (!isPasswordValid.value) {
+    passwordError.value = "Password must be at least 8 characters long";
+    isValid = false;
+  }
+  
+  // Validate password confirmation
+  if (!confirmPassword.value) {
+    confirmPasswordError.value = "Please confirm your password";
+    isValid = false;
+  } else if (!doPasswordsMatch.value) {
+    confirmPasswordError.value = "Passwords do not match";
+    isValid = false;
+  }
+  
+  if (isValid) {
     currentStep.value = 2;
-  } else {
-    error.value = "Please fill in all required fields.";
   }
 };
 
@@ -126,14 +276,21 @@ const toggleAuthMode = () => {
             <form v-if="isLogin" @submit="handleSubmit" key="login">
               <h2>Login</h2>
               
+              <!-- Error message display -->
+              <div v-if="error" class="error-message">
+                {{ error }}
+              </div>
+              
               <div class="form-group">
                 <label>Email Address</label>
                 <input
                   type="email"
                   v-model="email"
                   placeholder="Enter your email"
+                  :class="{ 'input-error': emailError }"
                   required
                 />
+                <span v-if="emailError" class="field-error">{{ emailError }}</span>
               </div>
 
               <div class="form-group">
@@ -142,8 +299,10 @@ const toggleAuthMode = () => {
                   type="password"
                   v-model="password"
                   placeholder="Enter your password"
+                  :class="{ 'input-error': passwordError }"
                   required
                 />
+                <span v-if="passwordError" class="field-error">{{ passwordError }}</span>
               </div>
 
               <div class="form-options">
@@ -185,6 +344,11 @@ const toggleAuthMode = () => {
             <form v-else @submit="handleSubmit" key="register">
               <h2>Create Account</h2>
               
+              <!-- Error message display -->
+              <div v-if="error" class="error-message">
+                {{ error }}
+              </div>
+              
               <!-- Step 1: Basic Information -->
               <div v-if="currentStep === 1">
                 <div class="form-group">
@@ -193,8 +357,10 @@ const toggleAuthMode = () => {
                     type="text"
                     v-model="fullName"
                     placeholder="Enter your full name"
+                    :class="{ 'input-error': fullNameError }"
                     required
                   />
+                  <span v-if="fullNameError" class="field-error">{{ fullNameError }}</span>
                 </div>
 
                 <div class="form-group">
@@ -203,8 +369,10 @@ const toggleAuthMode = () => {
                     type="email"
                     v-model="email"
                     placeholder="Enter your email"
+                    :class="{ 'input-error': emailError }"
                     required
                   />
+                  <span v-if="emailError" class="field-error">{{ emailError }}</span>
                 </div>
 
                 <div class="form-group">
@@ -212,9 +380,11 @@ const toggleAuthMode = () => {
                   <input
                     type="password"
                     v-model="password"
-                    placeholder="Create a password"
+                    placeholder="Create a password (min. 8 characters)"
+                    :class="{ 'input-error': passwordError }"
                     required
                   />
+                  <span v-if="passwordError" class="field-error">{{ passwordError }}</span>
                 </div>
 
                 <div class="form-group">
@@ -223,8 +393,10 @@ const toggleAuthMode = () => {
                     type="password"
                     v-model="confirmPassword"
                     placeholder="Confirm your password"
+                    :class="{ 'input-error': confirmPasswordError }"
                     required
                   />
+                  <span v-if="confirmPasswordError" class="field-error">{{ confirmPasswordError }}</span>
                 </div>
 
                 <button type="button" @click="nextStep" class="auth-button">Next</button>
@@ -287,6 +459,14 @@ const toggleAuthMode = () => {
             </form>
           </Transition>
         </div>
+      </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="success-modal-overlay">
+      <div class="success-modal">
+        <div class="success-icon">✓</div>
+        <h3>{{ successMessage }}</h3>
       </div>
     </div>
   </div>
@@ -624,5 +804,83 @@ const toggleAuthMode = () => {
   .register-options {
     flex-direction: column;
   }
+}
+
+/* Error message styling */
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  border-left: 4px solid #ef4444;
+}
+
+/* Form validation styling */
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Success modal styling */
+.success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.success-modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-icon {
+  background-color: #10b981;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+}
+
+.success-modal h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  margin: 0;
 }
 </style>
