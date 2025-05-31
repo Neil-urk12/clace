@@ -737,10 +737,10 @@ onUnmounted(() => {
     .floating-create-btn-container {
         display: flex;
         position: fixed;
-        bottom: 70px;
+        bottom: 130px;
         /* Position above the bottom nav */
         right: 20px;
-        z-index: 1000;
+        z-index: 500;
     }
 
     .floating-create-btn {
@@ -748,7 +748,6 @@ onUnmounted(() => {
         color: #667eea !important;
         border: 2px solid #667eea !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-        transform: translateY(-50px);
         width: auto !important;
         height: 56px !important;
         border-radius: 28px !important;
@@ -760,6 +759,7 @@ onUnmounted(() => {
         background: #f8fafc !important;
         color: #5a67d8 !important;
         border-color: #5a67d8 !important;
+        transform: scale(1.1);
     }
 
     .floating-create-btn svg {
