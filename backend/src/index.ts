@@ -1,4 +1,6 @@
+import 'dotenv/config';
 import { Elysia } from "elysia";
+import "../src/config/db_config";
 
 const app = new Elysia()
 
