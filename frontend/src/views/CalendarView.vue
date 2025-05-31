@@ -152,11 +152,8 @@ onUnmounted(() => {
     />
 
     <!-- Sidebar Overlay (mobile) -->
-    <div
-      v-if="sidebarOpen"
-      class="sidebar-overlay"
-      @click="toggleSidebar"
-    ></div>
+    <!-- Sidebar Overlay (only covers main content) -->
+  <div v-if="sidebarOpen" class="sidebar-overlay visible" @click="toggleSidebar"></div>
 
     <!-- Main Content -->
     <div :class="['main-content', { 'sidebar-expanded': sidebarOpen }]">
@@ -204,7 +201,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="header-right">
+        <div class="header-right desktop-only">
           <BaseButton
             @click="
               isCreatingEvent = true;
@@ -245,6 +242,22 @@ onUnmounted(() => {
         @close="closeModal"
       />
     </div>
+    
+    <!-- Floating Create Button (mobile & tablet) -->
+    <div class="floating-create-btn-container">
+      <BaseButton
+        @click="
+          isCreatingEvent = true;
+          showEventModal = true;
+        "
+        design="gradient-primary"
+        size="large"
+        :icon-left="Plus"
+        class="floating-create-btn"
+      >
+        <span class="create-text">Create</span>
+      </BaseButton>
+    </div>
   </div>
 </template>
 
@@ -282,6 +295,12 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
   display: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
 }
 
 /* Main Content */
@@ -295,8 +314,22 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* Sidebar behavior for different screen sizes */
 .main-content.sidebar-expanded {
   margin-left: 320px;
+}
+
+/* Medium screens - make sidebar an overlay */
+@media (max-width: 1280px) and (min-width: 1025px) {
+  .main-content.sidebar-expanded {
+    margin-left: 0;
+  }
+  
+  .sidebar-overlay {
+    display: block;
+    z-index: 998; /* Below the sidebar (z-index 1001) but above other content */
+    left: 320px; /* Start after the sidebar width */
+  }
 }
 
 .sidebar-toggle-btn {
@@ -519,7 +552,6 @@ onUnmounted(() => {
 }
 
 .calendar-content {
-  flex: 1;
   padding: 1.5rem;
   position: relative;
   z-index: 1;
@@ -545,6 +577,13 @@ onUnmounted(() => {
 
 /* Desktop-specific styles - ensure full height utilization */
 @media (min-width: 1025px) {
+  .floating-create-btn-container {
+    display: none; /* Hide floating button on desktop */
+  }
+  
+  .create-event-btn {
+    display: flex !important; /* Show header button on desktop */
+  }
   .calendar-view {
     height: 100vh;
     overflow: hidden;
@@ -579,7 +618,7 @@ onUnmounted(() => {
 
   .main-content {
     min-height: calc(100vh - 50px);
-    height: auto;
+    /* height: auto; */
   }
 
   .sidebar {
@@ -598,11 +637,13 @@ onUnmounted(() => {
 
   .sidebar-overlay {
     display: block;
-    z-index: 1000;
+    z-index: 998; /* Below the sidebar (z-index 1001) but above other content */
+    left: 300px; /* Start after the sidebar width for tablet */
   }
 
   .calendar-header {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 0.75rem;
     padding: 1rem 0.75rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -610,6 +651,14 @@ onUnmounted(() => {
     border-bottom: none;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     min-height: auto;
+  }
+
+  
+  
+  @media (max-width: 768px) {
+    .calendar-header {
+      flex-direction: column;
+    }
   }
 
   .sidebar-toggle-btn {
@@ -639,23 +688,37 @@ onUnmounted(() => {
     order: 1;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    justify-content: flex-start;
+    flex: 2;
+    min-width: 0;
   }
 
   .header-center {
-    order: 3;
-    width: 100%;
+    order: 2;
+    flex: 1;
     justify-content: center;
+    min-width: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .header-left {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    .header-center {
+      order: 3;
+      width: 100%;
+    }
   }
 
   .header-right {
     order: 2;
-    width: 100%;
+    width: auto;
     justify-content: flex-end;
-    position: absolute;
-    top: 1rem;
-    right: 0.75rem;
+    position: relative;
+    top: auto;
+    right: auto;
   }
 
   .nav-controls {
@@ -701,25 +764,46 @@ onUnmounted(() => {
   .create-text {
     display: none;
   }
-
+  
   .create-event-btn {
-    padding: 0.5rem !important;
-    width: 2.5rem !important;
-    height: 2.5rem !important;
+    display: none !important;
+  }
+  
+  /* Floating create button for mobile and tablet */
+  .floating-create-btn-container {
+    display: flex;
+    position: fixed;
+    bottom: 70px; /* Position above the bottom nav */
+    right: 20px;
+    z-index: 1000;
+  }
+  
+  .floating-create-btn {
+    width: 56px !important;
+    height: 56px !important;
     border-radius: 50% !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    padding: 0 !important;
+  }
   }
 
   .view-controls {
     width: 100%;
-    justify-content: center;
+    justify-content: space-around;
+    align-items: center;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.3rem;
+    align-items: center;
   }
 
   .view-btn {
-    flex: 1;
+    /* flex: 1; */
     justify-content: center;
-    color: rgba(255, 255, 255, 0.8);
+    /* color: rgba(255, 255, 255, 0.8); */
+    /* font-size: 0.8rem; */
+    /* padding: 0.5rem 1rem; */ /* WTF KA NONSENSE ANING CSS */
+    /* gap: 10px; */
   }
 
   .view-btn:hover {
@@ -728,13 +812,13 @@ onUnmounted(() => {
 
   .view-btn.active {
     background: rgba(255, 255, 255, 0.2);
-    color: white;
+    /* color: white; */
   }
 
   .calendar-content {
     padding: 1rem;
     background: transparent;
-    flex: 1;
+    /* flex: 1; */
     overflow: auto;
   }
 
@@ -745,10 +829,12 @@ onUnmounted(() => {
     bottom: 0.5rem;
     border-radius: 16px;
   }
-}
 
 /* Mobile specific adjustments */
 @media (max-width: 480px) {
+  .sidebar-overlay {
+    left: 240px; /* Start after the sidebar width for mobile */
+  }
   .calendar-view {
     min-height: calc(100vh - 80px);
   }
@@ -801,10 +887,9 @@ onUnmounted(() => {
     margin: 0 0.5rem;
   }
 
-  .create-event-btn {
-    width: 2rem !important;
-    height: 2rem !important;
-    padding: 0.5rem !important;
+  .floating-create-btn {
+    width: 48px !important;
+    height: 48px !important;
   }
 
   .view-btn {
