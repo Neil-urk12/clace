@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/auth'; 
+const API_URL = 'https://clace.onrender.com/api/auth'; 
 
 import type { LoginCredentials, RegisterPayloadBackend } from '@/types/auth';
 

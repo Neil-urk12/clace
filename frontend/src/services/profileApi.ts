@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { UserProfile } from '@/stores/profileStore'
 
-const API_URL = 'http://localhost:3000/api/profile'
+const API_URL = 'https://clace.onrender.com/api/profile'
 
 // Helper function to get auth header
 const getAuthHeader = () => {
@@ -69,7 +69,7 @@ export const profileApi = {
       // Use the existing auth service for logout
       const token = localStorage.getItem('authToken')
       if (token) {
-        await axios.post('http://localhost:3000/api/auth/logout', { token }, {
+        await axios.post('https://clace.onrender.com/api/auth/logout', { token }, {
           headers: { Authorization: `Bearer ${token}` }
         })
       }

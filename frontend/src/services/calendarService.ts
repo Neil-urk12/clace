@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Calendar, CreateCalendarPayload, CalendarResponse } from '@/types/calendar';
 
-const API_URL = 'http://localhost:3000/api/calendars';
+const API_URL = 'https://clace.onrender.com/api/calendars';
 
 const calendarService = {
   async createCalendar(calendarData: CreateCalendarPayload): Promise<CalendarResponse> {
