@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import EventFilterTabs from "@/components/Dashboard/EventFilterTabs.vue";
 import EventCard from "@/components/Dashboard/EventCard.vue";
 import { useEventStore } from "../stores/eventStore";
 import { useAuthStore } from "../stores/authStore";
 import { useCalendarStore } from "../stores/calendarStore";
 
+const router = useRouter();
 const eventStore = useEventStore();
 const authStore = useAuthStore();
 const calendarStore = useCalendarStore();
@@ -31,8 +33,6 @@ onMounted(async () => {
   // Initialize auth if needed
   if (!authStore.isAuthenticated || !authStore.user) {
     await authStore.initializeAuth();
-    // Wait a bit for auth to initialize if needed
-    await new Promise(resolve => setTimeout(resolve, 300));
   }
   
   console.log('User after initialization:', authStore.user);
@@ -75,8 +75,9 @@ onMounted(async () => {
       }
     }
   } else {
-    // Not authenticated - should redirect to login, but fallback to class ID form
-    showClassIdForm.value = true;
+    // Not authenticated - redirect to login
+    router.push('/auth');
+    return;
   }
   
   loading.value = false;
@@ -97,6 +98,7 @@ const submitClassId = async () => {
     
     if (result.success) {
       classIdSubmitted.value = true;
+      authStore.setHasJoinedClass(true);
       showClassIdForm.value = false;
       showDashboard.value = true;
       
