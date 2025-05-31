@@ -9,8 +9,10 @@ import {
   UserRound,
   Users,
   Info,
+  Copy,
 } from "lucide-vue-next";
 import { useEventStore } from "../../stores/eventStore";
+import { useCalendarStore } from "../../stores/calendarStore";
 import type { SharedEventItem } from "../../types/event";
 
 const MiniCalendar = defineAsyncComponent(() => import("./MiniCalendar.vue"));
@@ -37,15 +39,33 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const eventStore = useEventStore();
+const calendarStore = useCalendarStore();
 
 const showMembersPopup = ref(false);
+const showCalendarInfoPopup = ref(false);
+const copySuccess = ref(false);
 
 const toggleMembersPopup = () => {
   showMembersPopup.value = !showMembersPopup.value;
 };
 
 const handleClassInfoClick = () => {
-  console.log("Class Information button clicked");
+  showCalendarInfoPopup.value = !showCalendarInfoPopup.value;
+};
+
+const copyCalendarId = () => {
+  if (calendarStore.calendar?.calendar_id) {
+    navigator.clipboard.writeText(calendarStore.calendar.calendar_id)
+      .then(() => {
+        copySuccess.value = true;
+        setTimeout(() => {
+          copySuccess.value = false;
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  }
 };
 
 const upcomingEventsToList = computed(() => {
@@ -141,6 +161,41 @@ const selectActivityFilter = (filter: "Upcoming" | "Recent") => {
         <div v-if="showMembersPopup" class="members-popup">
           <h3>Class Members</h3>
           <p>List of class members will go here.</p>
+        </div>
+
+        <div v-if="showCalendarInfoPopup" class="calendar-info-popup">
+          <div class="popup-header">
+            <h3>Class Calendar Information</h3>
+            <button @click="showCalendarInfoPopup = false" class="close-btn">
+              <X :size="18" />
+            </button>
+          </div>
+          
+          <div class="info-section">
+            <h4>Calendar Name</h4>
+            <p>{{ calendarStore.calendarName }}</p>
+          </div>
+          
+          <div class="info-section">
+            <h4>Calendar ID</h4>
+            <div class="copy-section">
+              <p class="calendar-id">{{ calendarStore.calendar?.calendar_id }}</p>
+              <button @click="copyCalendarId" class="copy-btn" :class="{ 'copied': copySuccess }">
+                <Copy :size="16" />
+                <span v-if="copySuccess">Copied!</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h4>Join Code</h4>
+            <p class="join-code">{{ calendarStore.joinCode }}</p>
+          </div>
+          
+          <div class="info-section">
+            <h4>Creator</h4>
+            <p>{{ calendarStore.isCreator ? 'You are the creator' : 'Another user' }}</p>
+          </div>
         </div>
       </teleport>
 
@@ -265,7 +320,7 @@ const selectActivityFilter = (filter: "Upcoming" | "Recent") => {
   align-items: center;
 }
 
-.members-popup {
+.members-popup, .calendar-info-popup {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -274,15 +329,13 @@ const selectActivityFilter = (filter: "Upcoming" | "Recent") => {
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  padding: 1rem;
-  z-index: 1001;
-  width: 90%;
-  max-width: 400px;
-  color: #4c1d95;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 300px;
 }
 
-.members-popup h3 {
+.popup-header {
   margin-top: 0;
   font-size: 1.2rem;
   font-weight: bold;

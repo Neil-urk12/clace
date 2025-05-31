@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { defineAsyncComponent, computed  } from "vue";
+import { defineAsyncComponent, computed, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { LayoutDashboard, UserRound, LogOut } from "lucide-vue-next";
+import { LayoutDashboard, UserRound, LogOut, Info } from "lucide-vue-next";
 import { useAuthStore } from "@/stores/authStore";
+import { useCalendarStore } from "@/stores/calendarStore";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const calendarStore = useCalendarStore();
 const SearchBar = defineAsyncComponent(() => import("@/components/Global/SearchBar.vue"));
 const CalendarIcon = defineAsyncComponent(() => import("../Global/EmptyCalendarIcon.vue"));
 
@@ -22,6 +24,16 @@ const isProfileRoute = computed(() => {
 const hasJoinedClass = computed(() => {
   return authStore.hasJoinedClass;
 });
+
+const calendarId = computed(() => {
+  return calendarStore.calendar?.calendar_id || '';
+});
+
+const showCalendarInfo = ref(false);
+
+const toggleCalendarInfo = () => {
+  showCalendarInfo.value = !showCalendarInfo.value;
+};
 
 function isHiddenRoute(): boolean {
   return hiddenRoutes.includes(route.path);
@@ -67,6 +79,24 @@ function isHiddenRoute(): boolean {
           >
             <UserRound :size="20" />
           </button>
+          
+          <!-- Calendar Info Button -->
+          <button 
+            v-if="hasJoinedClass && calendarId"
+            class="action-button" 
+            aria-label="Calendar Info" 
+            @click="toggleCalendarInfo"
+          >
+            <Info :size="20" />
+          </button>
+          
+          <!-- Calendar ID Popup -->
+          <div v-if="showCalendarInfo" class="calendar-info-popup">
+            <h3>Class Calendar ID</h3>
+            <p class="calendar-id">{{ calendarId }}</p>
+            <p class="calendar-name">{{ calendarStore.calendarName }}</p>
+            <p class="join-code">Join Code: {{ calendarStore.joinCode }}</p>
+          </div>
 
           <!-- Show sign out button if user has not joined a class -->
           <button 
@@ -157,6 +187,53 @@ function isHiddenRoute(): boolean {
 .action-button:hover {
   background-color: #f3f4f6;
   color: #4f46e5;
+}
+
+.calendar-info-popup {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 250px;
+}
+
+.calendar-info-popup h3 {
+  margin-top: 0;
+  color: #4f46e5;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-id {
+  font-family: monospace;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  word-break: break-all;
+  margin-bottom: 0.5rem;
+  color: #4f46e5;
+}
+
+.calendar-name {
+  font-weight: 600;
+  color: #4f46e5;
+  margin-bottom: 0.5rem;
+}
+
+.join-code {
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-block;
 }
 
 @media (min-width: 1024px) {
