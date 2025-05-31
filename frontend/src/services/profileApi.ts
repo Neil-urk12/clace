@@ -1,59 +1,85 @@
-import type { UserProfile, UserPreferences } from '@/stores/profileStore'
+import axios from 'axios'
+import type { UserProfile } from '@/stores/profileStore'
 
-// Simulated database
-let userProfile: UserProfile = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: '/api/placeholder/150/150',
-  role: 'Student',
-  joinDate: 'January 2024'
+const API_URL = 'http://localhost:3000/api/profile'
+
+// Helper function to get auth header
+const getAuthHeader = () => {
+  const token = localStorage.getItem('authToken')
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
-
-let userPreferences: UserPreferences = {
-  notifications: true,
-  darkMode: false,
-  language: 'English'
-}
-
-// Simulate network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const profileApi = {
   // User Profile
   async getUserProfile(): Promise<UserProfile> {
-    await delay(300)
-    return { ...userProfile }
+    try {
+      const response = await axios.get(API_URL, {
+        headers: getAuthHeader()
+      })
+      
+      if (response.data.success && response.data.profile) {
+        return response.data.profile
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch profile')
+      }
+    } catch (error: any) {
+      console.error('Error fetching user profile:', error)
+      throw error.response?.data || error.message || error
+    }
   },
 
   async updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-    await delay(500)
-    userProfile = { ...userProfile, ...updates }
-    return { ...userProfile }
+    try {
+      const response = await axios.patch(API_URL, updates, {
+        headers: getAuthHeader()
+      })
+      
+      if (response.data.success && response.data.profile) {
+        return response.data.profile
+      } else {
+        throw new Error(response.data.message || 'Failed to update profile')
+      }
+    } catch (error: any) {
+      console.error('Error updating user profile:', error)
+      throw error.response?.data || error.message || error
+    }
   },
 
-  // User Preferences
-  async getUserPreferences(): Promise<UserPreferences> {
-    await delay(300)
-    return { ...userPreferences }
-  },
 
-  async updateUserPreferences(updates: Partial<UserPreferences>): Promise<UserPreferences> {
-    await delay(500)
-    userPreferences = { ...userPreferences, ...updates }
-    return { ...userPreferences }
-  },
 
   // Authentication
   async updatePassword(currentPassword: string, newPassword: string): Promise<boolean> {
-    await delay(800)
-    // In a real app, we would validate the current password here
-    return true
+    try {
+      const response = await axios.post(`${API_URL}/password`, {
+        currentPassword,
+        newPassword
+      }, {
+        headers: getAuthHeader()
+      })
+      
+      return response.data.success === true
+    } catch (error: any) {
+      console.error('Error updating password:', error)
+      throw error.response?.data || error.message || error
+    }
   },
 
   async signOut(): Promise<boolean> {
-    await delay(300)
-    // In a real app, we would clear the auth token here
-    return true
+    try {
+      // Use the existing auth service for logout
+      const token = localStorage.getItem('authToken')
+      if (token) {
+        await axios.post('http://localhost:3000/api/auth/logout', { token }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      }
+      return true
+    } catch (error: any) {
+      console.error('Error signing out:', error)
+      // Even if the server request fails, we should still return true
+      // as the frontend will clear local auth data
+      return true
+    }
   }
 }
 

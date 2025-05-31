@@ -10,12 +10,6 @@ export interface UserProfile {
   joinDate: string
 }
 
-export interface UserPreferences {
-  notifications: boolean
-  darkMode: boolean
-  language: string
-}
-
 export const useProfileStore = defineStore('profile', () => {
   // State
   const user = ref<UserProfile>({
@@ -26,18 +20,11 @@ export const useProfileStore = defineStore('profile', () => {
     joinDate: ''
   })
 
-  const preferences = ref<UserPreferences>({
-    notifications: false,
-    darkMode: false,
-    language: 'English'
-  })
-
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   // Getters
   const fullName = computed(() => user.value.name)
-  const isDarkMode = computed(() => preferences.value.darkMode)
 
   // Actions
   const fetchUserProfile = async () => {
@@ -54,26 +41,11 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  const fetchUserPreferences = async () => {
-    try {
-      isLoading.value = true
-      error.value = null
-      const prefs = await profileApi.getUserPreferences()
-      preferences.value = { ...prefs }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch preferences'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
+
 
   // Initialize store
   const initialize = async () => {
-    await Promise.all([
-      fetchUserProfile(),
-      fetchUserPreferences()
-    ])
+    await fetchUserProfile()
   }
 
   // Call initialize when store is created
@@ -96,38 +68,7 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  const updateUserPreferences = async (updatedPreferences: Partial<UserPreferences>) => {
-    try {
-      isLoading.value = true
-      error.value = null
-      
-      const updatedPrefs = await profileApi.updateUserPreferences(updatedPreferences)
-      preferences.value = { ...updatedPrefs }
-      
-      return true
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update preferences'
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
 
-  const toggleNotifications = async () => {
-    return await updateUserPreferences({ 
-      notifications: !preferences.value.notifications 
-    })
-  }
-
-  const toggleDarkMode = async () => {
-    return await updateUserPreferences({ 
-      darkMode: !preferences.value.darkMode 
-    })
-  }
-
-  const changeLanguage = async (language: string) => {
-    return await updateUserPreferences({ language })
-  }
 
   const updatePassword = async (currentPassword: string, newPassword: string) => {
     try {
@@ -161,23 +102,16 @@ export const useProfileStore = defineStore('profile', () => {
   return {
     // State
     user,
-    preferences,
     isLoading,
     error,
     
     // Getters
     fullName,
-    isDarkMode,
     
     // Actions
     fetchUserProfile,
-    fetchUserPreferences,
     initialize,
     updateUserProfile,
-    updateUserPreferences,
-    toggleNotifications,
-    toggleDarkMode,
-    changeLanguage,
     updatePassword,
     signOut
   }

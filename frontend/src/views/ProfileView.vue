@@ -13,18 +13,13 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 // Use storeToRefs to maintain reactivity when destructuring
-const { user, preferences, isLoading, error } = storeToRefs(profileStore)
+const { user, isLoading, error } = storeToRefs(profileStore)
 const { isAuthenticated } = storeToRefs(authStore)
 
 // Fetch user profile on component mount if authenticated
 if (isAuthenticated.value) {
   profileStore.fetchUserProfile()
-  profileStore.fetchUserPreferences()
 }
-
-// Computed properties
-const isNotificationsEnabled = computed(() => preferences.value.notifications)
-const isDarkModeEnabled = computed(() => preferences.value.darkMode)
 
 // Check if personal info has changed
 const hasPersonalInfoChanges = computed(() => {
@@ -59,18 +54,7 @@ const passwordData = reactive({
 
 const passwordError = ref('')
 
-// Methods
-const toggleNotifications = async () => {
-  await profileStore.toggleNotifications()
-}
 
-const toggleDarkMode = async () => {
-  await profileStore.toggleDarkMode()
-}
-
-const changeLanguage = async (language: string) => {
-  await profileStore.changeLanguage(language)
-}
 
 const openPasswordModal = () => {
   // Reset form data
@@ -225,60 +209,7 @@ const handleAvatarChange = async () => {
           </div>
         </div>
 
-        <!-- Preferences -->
-        <div class="section">
-          <h2 class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            Preferences
-          </h2>
-          
-          <div class="setting-item hover-effect">
-            <div class="setting-info">
-              <h3>Notifications</h3>
-              <p>Receive email notifications about events</p>
-            </div>
-            <button 
-              class="toggle-switch" 
-              :class="{ active: isNotificationsEnabled }" 
-              @click="toggleNotifications"
-              role="switch"
-              :aria-checked="isNotificationsEnabled"
-            >
-              <span class="toggle-slider"></span>
-            </button>
-          </div>
-          
-          <div class="setting-item hover-effect">
-            <div class="setting-info">
-              <h3>Dark Mode</h3>
-              <p>Switch between light and dark themes</p>
-            </div>
-            <button 
-              class="toggle-switch" 
-              :class="{ active: isDarkModeEnabled }" 
-              @click="toggleDarkMode"
-              role="switch"
-              :aria-checked="isDarkModeEnabled"
-            >
-              <span class="toggle-slider"></span>
-            </button>
-          </div>
 
-          <div class="setting-item hover-effect">
-            <div class="setting-info">
-              <h3>Language</h3>
-              <p>{{ preferences.language }}</p>
-            </div>
-            <button @click="changeLanguage('English')" class="setting-action">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
 
         <!-- Support -->
         <div class="section">

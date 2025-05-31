@@ -62,13 +62,10 @@ pool.getConnection()
       `);
       console.log('✅ Events table verified');
 
-      // Create user_preferences table
+      // Create user_preferences table (simplified version without preferences)
       await connection.execute(`
         CREATE TABLE IF NOT EXISTS user_preferences (
           user_id CHAR(36) NOT NULL PRIMARY KEY,
-          notifications BOOLEAN DEFAULT FALSE,
-          dark_mode BOOLEAN DEFAULT FALSE,
-          language VARCHAR(50) DEFAULT 'English',
           avatar VARCHAR(255) DEFAULT '/api/placeholder/150/150',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
