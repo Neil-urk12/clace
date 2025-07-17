@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { UserProfile } from '@/stores/profileStore'
 
-const API_URL = 'https://clace.onrender.com/api/profile'
+const API_URL = 'https://clace-sp45.onrender.com/api/profile'
 
 // Helper function to get auth header
 const getAuthHeader = () => {
@@ -16,7 +16,7 @@ export const profileApi = {
       const response = await axios.get(API_URL, {
         headers: getAuthHeader()
       })
-      
+
       if (response.data.success && response.data.profile) {
         return response.data.profile
       } else {
@@ -33,7 +33,7 @@ export const profileApi = {
       const response = await axios.patch(API_URL, updates, {
         headers: getAuthHeader()
       })
-      
+
       if (response.data.success && response.data.profile) {
         return response.data.profile
       } else {
@@ -56,7 +56,7 @@ export const profileApi = {
       }, {
         headers: getAuthHeader()
       })
-      
+
       return response.data.success === true
     } catch (error: any) {
       console.error('Error updating password:', error)
@@ -69,7 +69,7 @@ export const profileApi = {
       // Use the existing auth service for logout
       const token = localStorage.getItem('authToken')
       if (token) {
-        await axios.post('https://clace.onrender.com/api/auth/logout', { token }, {
+        await axios.post('https://clace-sp45.onrender.com/api/auth/logout', { token }, {
           headers: { Authorization: `Bearer ${token}` }
         })
       }

@@ -1,6 +1,6 @@
 import type { SharedEventItem } from '../types/event';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://clace.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://clace-sp45.onrender.com';
 
 export interface CreateEventData extends Omit<SharedEventItem, 'id'> { }
 

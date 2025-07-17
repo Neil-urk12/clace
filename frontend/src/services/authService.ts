@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://clace.onrender.com/api/auth'; 
+const API_URL = 'https://clace-sp45.onrender.com/api/auth';
 
 import type { LoginCredentials, RegisterPayloadBackend } from '@/types/auth';
 
@@ -46,7 +46,7 @@ const authService = {
       if (!token) {
         return null;
       }
-      
+
       const response = await axios.get(`${API_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
