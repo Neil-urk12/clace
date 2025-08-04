@@ -9,11 +9,10 @@ install-frontend:
 install: install-backend install-frontend
 
 dev-backend:
-	cd backend && bun run dev
+	cd backend && bun dev --watch
 
 dev-frontend:
-	cd frontend && bun run dev
+	cd frontend && bun dev -- --host
 
 dev:
-	$(MAKE) dev-backend &amp; $(MAKE) dev-frontend
-
+	$(MAKE) dev-backend & $(MAKE) dev-frontend
