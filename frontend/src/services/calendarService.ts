@@ -1,65 +1,37 @@
-import axios from 'axios';
-import type { Calendar, CreateCalendarPayload, CalendarResponse } from '@/types/calendar';
+import { apiClient } from '@/api/client';
+import { NotFoundError } from '@/api/errors';
+import type { Calendar, CreateCalendarPayload } from '@/types/calendar';
 
-const API_URL = 'https://clace-sp45.onrender.com/api/calendars';
+/**
+ * Returns the calendar unwrapped. Methods that semantically represent
+ * "look up by ID; absent is a valid result" return null via typed catch —
+ * the apiClient throws NotFoundError on 404; the service converts that to null.
+ */
+export const calendarService = {
+  async createCalendar(payload: CreateCalendarPayload): Promise<Calendar> {
+    return apiClient.post<Calendar>('/calendars', payload);
+  },
 
-const calendarService = {
-  async createCalendar(calendarData: CreateCalendarPayload): Promise<CalendarResponse> {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(`${API_URL}`, calendarData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, calendar: response.data.data };
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw error.response?.data || error.message;
-      }
-      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
-      throw error;
-    }
+  async joinCalendarByCode(joinCode: string, userId: string): Promise<Calendar> {
+    return apiClient.post<Calendar>('/calendars/join', { join_code: joinCode, user_id: userId });
   },
 
   async getCalendarByUserId(userId: string): Promise<Calendar | null> {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`${API_URL}/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data.data ?? null;
-    } catch (error) {
-      console.error('Error fetching calendar:', error);
-      return null;
-    }
-  },
-
-  async joinCalendarByCode(joinCode: string, userId: string): Promise<CalendarResponse> {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(`${API_URL}/join`, { join_code: joinCode, user_id: userId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, calendar: response.data.data };
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw error.response?.data || error.message;
-      }
-      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
-      throw error;
-    }
+    return getCalendarById(`/calendars/user/${userId}`);
   },
 
   async getCalendarById(calendarId: string): Promise<Calendar | null> {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`${API_URL}/${calendarId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data.data ?? null;
-    } catch (error) {
-      console.error('Error fetching calendar:', error);
-      return null;
-    }
+    return getCalendarById(`/calendars/${calendarId}`);
+  },
+};
+
+/** Shared null-on-404 helper for the two `getCalendar*` methods. */
+const getCalendarById = async (path: string): Promise<Calendar | null> => {
+  try {
+    return await apiClient.get<Calendar>(path);
+  } catch (err) {
+    if (err instanceof NotFoundError) return null;
+    throw err;
   }
 };
 

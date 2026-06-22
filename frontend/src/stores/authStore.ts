@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
 import authService from '@/services/authService'
+import { DomainError, UnauthorizedError } from '@/api/errors'
 
 import type { User, LoginCredentials, RegisterPayload } from '@/types/auth';
 
@@ -19,7 +19,7 @@ export const useAuthStore = defineStore('auth', {
     hasJoinedClass: false,
   }),
   actions: {
-    async login(credentials: LoginCredentials) {
+    async login(credentials: LoginCredentials): Promise<{ success: boolean; message?: string }> {
       try {
         const response = await authService.login(credentials);
         this.token = response.token;
@@ -31,14 +31,14 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Login failed:', error);
         this.logout();
-        const serverMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        const serverMessage = error instanceof DomainError ? error.message : undefined;
         return {
           success: false,
           message: serverMessage || 'Invalid email or password. Please try again.'
         };
       }
     },
-    async register(userData: RegisterPayload) {
+    async register(userData: RegisterPayload): Promise<{ success: boolean; message?: string }> {
       try {
         const backendPayload = {
           full_name: userData.fullName,
@@ -56,7 +56,7 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Registration failed:', error);
         this.logout();
-        const serverMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        const serverMessage = error instanceof DomainError ? error.message : undefined;
         return {
           success: false,
           message: serverMessage || 'Registration failed. Please try again.'
@@ -115,9 +115,10 @@ export const useAuthStore = defineStore('auth', {
         }
       } catch (error) {
         console.error('Failed to fetch current user:', error);
-        // If fetching fails, we might need to log the user out.
-        // Narrow to axios so a stray non-axios throw (e.g. JSON.parse failure) can't trigger logout.
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
+        // 401 here means the stored token is invalid — clear local session.
+        // Narrow to DomainError so a stray non-HTTP throw (e.g. JSON.parse failure)
+        // can't trigger logout.
+        if (error instanceof UnauthorizedError) {
           this.logout();
         }
       }

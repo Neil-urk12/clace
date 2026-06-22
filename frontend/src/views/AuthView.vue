@@ -166,7 +166,7 @@ const handleSubmit = async (e: Event) => {
       }, 1500);
     } else {
       // Show error message
-      error.value = result.message;
+      error.value = result.message ?? 'An error occurred. Please try again.';
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "An unexpected error occurred.";

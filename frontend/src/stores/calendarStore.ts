@@ -41,14 +41,10 @@ export const useCalendarStore = defineStore('calendar', {
           calendar_name: calendarName,
           creator_user_id: authStore.user.user_id
         });
-        
-        if (response.success && response.calendar) {
-          this.calendar = response.calendar;
-          authStore.setHasJoinedClass(true);
-          return { success: true, calendar: response.calendar };
-        } else {
-          throw new Error(response.message || 'Failed to create calendar');
-        }
+
+        this.calendar = response;
+        authStore.setHasJoinedClass(true);
+        return { success: true, calendar: response };
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'An error occurred while creating the calendar';
         console.error('Create calendar error:', error);
@@ -69,14 +65,10 @@ export const useCalendarStore = defineStore('calendar', {
         }
         
         const response = await calendarService.joinCalendarByCode(joinCode, authStore.user.user_id);
-        
-        if (response.success && response.calendar) {
-          this.calendar = response.calendar;
-          authStore.setHasJoinedClass(true);
-          return { success: true, calendar: response.calendar };
-        } else {
-          throw new Error(response.message || 'Failed to join calendar');
-        }
+
+        this.calendar = response;
+        authStore.setHasJoinedClass(true);
+        return { success: true, calendar: response };
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'An error occurred while joining the calendar';
         console.error('Join calendar error:', error);

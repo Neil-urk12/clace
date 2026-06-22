@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { SharedEventItem } from "../types/event";
-import { EventService } from "../services/eventService";
+import { eventService } from "../services/eventService";
 
 /**
  * @typedef {'Upcoming' | 'Recent'} PrimaryFilter
@@ -345,7 +345,7 @@ export const useEventStore = defineStore("eventStore", () => {
    */
   async function addEvent(eventData: Omit<SharedEventItem, "id">) {
     try {
-      const newEvent = await EventService.createEvent(eventData);
+      const newEvent = await eventService.createEvent(eventData);
       events.value.push(newEvent);
       return newEvent;
     } catch (error) {
@@ -360,7 +360,7 @@ export const useEventStore = defineStore("eventStore", () => {
    */
   async function updateEvent(updatedEvent: SharedEventItem) {
     try {
-      const updated = await EventService.updateEvent(updatedEvent);
+      const updated = await eventService.updateEvent(updatedEvent);
       const index = events.value.findIndex(
         (event) => event.id === updatedEvent.id,
       );
@@ -380,7 +380,7 @@ export const useEventStore = defineStore("eventStore", () => {
    */
   async function deleteEvent(eventId: string) {
     try {
-      await EventService.deleteEvent(eventId);
+      await eventService.deleteEvent(eventId);
       events.value = events.value.filter((event) => event.id !== eventId);
       return { success: true };
     } catch (error) {
@@ -403,7 +403,7 @@ export const useEventStore = defineStore("eventStore", () => {
         events.value = [];
       } else {
         // Fetch events from API
-        const fetchedEvents = await EventService.getAllEvents();
+        const fetchedEvents = await eventService.getAllEvents();
         events.value = fetchedEvents;
       }
     } catch (error) {
@@ -452,7 +452,7 @@ export const useEventStore = defineStore("eventStore", () => {
    */
   async function refreshEvents() {
     try {
-      const fetchedEvents = await EventService.getAllEvents();
+      const fetchedEvents = await eventService.getAllEvents();
       events.value = fetchedEvents;
       return fetchedEvents;
     } catch (error) {

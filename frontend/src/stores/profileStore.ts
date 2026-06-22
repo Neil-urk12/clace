@@ -1,6 +1,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { defineStore } from 'pinia'
 import { profileApi } from '@/services/profileApi'
+import authService from '@/services/authService'
 
 export interface UserProfile {
   name: string
@@ -76,7 +77,7 @@ export const useProfileStore = defineStore('profile', () => {
       error.value = null
       
       const result = await profileApi.updatePassword(currentPassword, newPassword)
-      return result
+      return result.success
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update password'
       return false
@@ -85,17 +86,14 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  // Single logout implementation lives in authService — never duplicate it here.
   const signOut = async () => {
     try {
-      isLoading.value = true
-      error.value = null
-      
-      return await profileApi.signOut()
+      const result = await authService.logout()
+      return result.success
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to sign out'
+      console.error('Sign out failed:', err)
       return false
-    } finally {
-      isLoading.value = false
     }
   }
 
