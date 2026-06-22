@@ -1,3 +1,4 @@
+import type { PoolConnection } from 'mysql2/promise';
 import pool from '../config/db_config';
 import { v4 as uuidv4 } from 'uuid';
 import { Calendar, CalendarModel } from './Calendar';
@@ -121,16 +122,29 @@ export class EventModel {
 
   static async bulkCreateForUser(eventsData: CreateEventInput[], userId: string): Promise<EventResponse[]> {
     const calendar = await this.getCalendarForUser(userId);
-    const results: EventResponse[] = [];
-    for (const eventData of eventsData) {
-      const created = await this.insertRow({
-        ...eventData,
-        calendar_id: calendar.calendar_id,
-        creator_user_id: userId,
-      });
-      results.push(created);
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const results: EventResponse[] = [];
+      for (const eventData of eventsData) {
+        const created = await this.insertRow(
+          {
+            ...eventData,
+            calendar_id: calendar.calendar_id,
+            creator_user_id: userId,
+          },
+          connection,
+        );
+        results.push(created);
+      }
+      await connection.commit();
+      return results;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
     }
-    return results;
   }
 
   // === PRIVATE — internal seam, not exposed to routes ===
@@ -143,8 +157,13 @@ export class EventModel {
     return calendar;
   }
 
-  private static async findById(eventId: string, calendarId: string): Promise<Event | null> {
-    const [rows] = await pool.execute(
+  private static async findById(
+    eventId: string,
+    calendarId: string,
+    connection?: PoolConnection,
+  ): Promise<Event | null> {
+    const executor = connection ?? pool;
+    const [rows] = await executor.execute(
       'SELECT * FROM Events WHERE event_id = ? AND calendar_id = ?',
       [eventId, calendarId]
     );
@@ -180,10 +199,11 @@ export class EventModel {
     return rows as Event[];
   }
 
-  private static async insertRow(eventData: CreateEventData): Promise<EventResponse> {
+  private static async insertRow(eventData: CreateEventData, connection?: PoolConnection): Promise<EventResponse> {
+    const executor = connection ?? pool;
     const eventId = uuidv4();
 
-    await pool.execute(
+    await executor.execute(
       `INSERT INTO Events (
         event_id, calendar_id, creator_user_id, title, description,
         start_datetime, end_datetime, all_day
@@ -200,7 +220,7 @@ export class EventModel {
       ]
     );
 
-    const createdEvent = await this.findById(eventId, eventData.calendar_id);
+    const createdEvent = await this.findById(eventId, eventData.calendar_id, connection);
     if (!createdEvent) {
       throw new Error('Failed to create event');
     }
