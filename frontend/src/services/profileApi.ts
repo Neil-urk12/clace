@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/client';
-import type { UserProfile } from '@/stores/profileStore';
+import type { UserProfile } from '@/types/profile';
 
 /**
  * Profile-related endpoints. Sign-out lives in `authService.logout` — there

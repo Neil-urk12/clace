@@ -2,14 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import { defineStore } from 'pinia'
 import { profileApi } from '@/services/profileApi'
 import authService from '@/services/authService'
-
-export interface UserProfile {
-  name: string
-  email: string
-  avatar: string
-  role: string
-  joinDate: string
-}
+import type { UserProfile } from '@/types/profile'
 
 export const useProfileStore = defineStore('profile', () => {
   // State
