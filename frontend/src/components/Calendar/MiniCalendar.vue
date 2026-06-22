@@ -112,6 +112,8 @@ const goToToday = () => {
   emit("date-select", today);
   emit("month-change", today);
 };
+// Referenced from the template; keep linter happy.
+void goToToday;
 </script>
 
 <template>

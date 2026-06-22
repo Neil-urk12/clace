@@ -111,8 +111,8 @@ const submitClassId = async () => {
     } else {
       throw new Error(result.message || 'Failed to join calendar');
     }
-  } catch (error: any) {
-    classIdError.value = error.message || 'Invalid class ID. Please try again.';
+  } catch (error) {
+    classIdError.value = error instanceof Error ? error.message : 'Invalid class ID. Please try again.';
   } finally {
     loading.value = false;
   }
@@ -145,8 +145,8 @@ const submitCalendarName = async () => {
     } else {
       throw new Error(result.message || 'Failed to create calendar');
     }
-  } catch (error: any) {
-    calendarNameError.value = error.message || 'Failed to create calendar. Please try again.';
+  } catch (error) {
+    calendarNameError.value = error instanceof Error ? error.message : 'Failed to create calendar. Please try again.';
     showPresidentForm.value = true;
     showPresidentLoading.value = false;
   } finally {

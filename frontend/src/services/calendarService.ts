@@ -11,8 +11,12 @@ const calendarService = {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error.message;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message;
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error;
     }
   },
 
@@ -23,7 +27,7 @@ const calendarService = {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.calendar;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching calendar:', error);
       return null;
     }
@@ -36,8 +40,12 @@ const calendarService = {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error.message;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message;
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error;
     }
   },
 
@@ -48,7 +56,7 @@ const calendarService = {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.calendar;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching calendar:', error);
       return null;
     }

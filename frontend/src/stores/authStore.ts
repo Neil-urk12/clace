@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import axios from 'axios';
 import authService from '@/services/authService'
 
 import type { User, LoginCredentials, RegisterPayload } from '@/types/auth';
@@ -27,12 +28,13 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userData', JSON.stringify(response.user));
         return { success: true };
-      } catch (error: any) {
+      } catch (error) {
         console.error('Login failed:', error);
         this.logout();
-        return { 
-          success: false, 
-          message: error.response?.data?.message || 'Invalid email or password. Please try again.'
+        const serverMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        return {
+          success: false,
+          message: serverMessage || 'Invalid email or password. Please try again.'
         };
       }
     },
@@ -51,12 +53,13 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userData', JSON.stringify(response.user));
         return { success: true };
-      } catch (error: any) {
+      } catch (error) {
         console.error('Registration failed:', error);
         this.logout();
-        return { 
-          success: false, 
-          message: error.response?.data?.message || 'Registration failed. Please try again.'
+        const serverMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        return {
+          success: false,
+          message: serverMessage || 'Registration failed. Please try again.'
         };
       }
     },
@@ -110,10 +113,11 @@ export const useAuthStore = defineStore('auth', {
             localStorage.setItem('userData', JSON.stringify(userData));
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Failed to fetch current user:', error);
-        // If fetching fails, we might need to log the user out
-        if (error.response?.status === 401) {
+        // If fetching fails, we might need to log the user out.
+        // Narrow to axios so a stray non-axios throw (e.g. JSON.parse failure) can't trigger logout.
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
           this.logout();
         }
       }

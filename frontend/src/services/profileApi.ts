@@ -22,9 +22,13 @@ export const profileApi = {
       } else {
         throw new Error(response.data.message || 'Failed to fetch profile')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching user profile:', error)
-      throw error.response?.data || error.message || error
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message || error
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error
     }
   },
 
@@ -39,9 +43,13 @@ export const profileApi = {
       } else {
         throw new Error(response.data.message || 'Failed to update profile')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating user profile:', error)
-      throw error.response?.data || error.message || error
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message || error
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error
     }
   },
 
@@ -58,9 +66,13 @@ export const profileApi = {
       })
 
       return response.data.success === true
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating password:', error)
-      throw error.response?.data || error.message || error
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message || error
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error
     }
   },
 
@@ -74,7 +86,7 @@ export const profileApi = {
         })
       }
       return true
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error signing out:', error)
       // Even if the server request fails, we should still return true
       // as the frontend will clear local auth data

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ClockIcon, MapPinIcon, CheckCircle2Icon, BookIcon } from 'lucide-vue-next';
 import type { SharedEventItem } from '@/types/event'; // Corrected import path
-import { computed } from 'vue';
 
 interface Props {
   activity?: SharedEventItem;
   loading?: boolean;
 }
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const getStatusIcon = (status?: SharedEventItem['status']) => {
   if (status === 'Completed' || status === 'Graded' || status === 'Submitted') {

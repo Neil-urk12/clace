@@ -2,7 +2,14 @@ import type { SharedEventItem } from '../types/event';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://clace-sp45.onrender.com';
 
-export interface CreateEventData extends Omit<SharedEventItem, 'id'> { }
+export type CreateEventData = Omit<SharedEventItem, 'id'>;
+
+// Raw shape returned by the backend before date strings are converted to Date.
+// Derived from SharedEventItem so it auto-tracks new fields.
+export type EventApiItem = Omit<SharedEventItem, 'startDate' | 'endDate'> & {
+    startDate: string;
+    endDate?: string;
+};
 
 export interface UpdateEventData extends Partial<SharedEventItem> {
     id: string;
@@ -36,8 +43,8 @@ export class EventService {
                 throw new Error(`Failed to fetch events: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            return data.map((event: any) => ({
+            const data: EventApiItem[] = await response.json();
+            return data.map((event) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,
@@ -187,8 +194,8 @@ export class EventService {
                 throw new Error(`Failed to fetch filtered events: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            return data.map((event: any) => ({
+            const data: EventApiItem[] = await response.json();
+            return data.map((event) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,
@@ -213,8 +220,8 @@ export class EventService {
                 throw new Error(`Failed to sync events: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            return data.map((event: any) => ({
+            const data: EventApiItem[] = await response.json();
+            return data.map((event) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,

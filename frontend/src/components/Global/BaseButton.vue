@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { Component } from 'vue';
 
 interface BaseButtonProps {
   type?: 'button' | 'submit' | 'reset';
   design?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'icon-only' | 'gradient-primary' | 'gradient-danger';
   size?: '' | 'large';
   disabled?: boolean;
-  iconLeft?: any;
-  iconRight?: any;
+  iconLeft?: Component;
+  iconRight?: Component;
 }
 
 const props = withDefaults(defineProps<BaseButtonProps>(), {

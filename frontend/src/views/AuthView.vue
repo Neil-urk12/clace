@@ -168,8 +168,8 @@ const handleSubmit = async (e: Event) => {
       // Show error message
       error.value = result.message;
     }
-  } catch (err: any) {
-    error.value = err.message || "An unexpected error occurred.";
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "An unexpected error occurred.";
   } finally {
     isLoading.value = false;
   }

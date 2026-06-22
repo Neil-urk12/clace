@@ -49,8 +49,8 @@ export const useCalendarStore = defineStore('calendar', {
         } else {
           throw new Error(response.message || 'Failed to create calendar');
         }
-      } catch (error: any) {
-        this.error = error.message || 'An error occurred while creating the calendar';
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : 'An error occurred while creating the calendar';
         console.error('Create calendar error:', error);
         return { success: false, message: this.error };
       } finally {
@@ -77,8 +77,8 @@ export const useCalendarStore = defineStore('calendar', {
         } else {
           throw new Error(response.message || 'Failed to join calendar');
         }
-      } catch (error: any) {
-        this.error = error.message || 'An error occurred while joining the calendar';
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : 'An error occurred while joining the calendar';
         console.error('Join calendar error:', error);
         return { success: false, message: this.error };
       } finally {
@@ -104,8 +104,8 @@ export const useCalendarStore = defineStore('calendar', {
         } else {
           return { success: false, message: 'No calendar found for user' };
         }
-      } catch (error: any) {
-        this.error = error.message || 'An error occurred while loading the calendar';
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : 'An error occurred while loading the calendar';
         console.error('Load calendar error:', error);
         return { success: false, message: this.error };
       } finally {

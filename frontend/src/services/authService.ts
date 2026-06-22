@@ -9,8 +9,12 @@ const authService = {
     try {
       const response = await axios.post(`${API_URL}/login`, credentials);
       return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error.message;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message;
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error;
     }
   },
 
@@ -18,8 +22,12 @@ const authService = {
     try {
       const response = await axios.post(`${API_URL}/register`, userData);
       return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error.message;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message;
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error;
     }
   },
 
@@ -33,7 +41,7 @@ const authService = {
         return response.data;
       }
       return { success: true };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Logout error:', error);
       // Even if the server request fails, we should still clear local auth data
       return { success: true };
@@ -51,9 +59,13 @@ const authService = {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.user;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Get current user error:', error);
-      throw error.response?.data || error.message;
+      if (axios.isAxiosError(error)) {
+        throw error.response?.data || error.message;
+      }
+      // Re-throw the original error (e.g. AbortError, TypeError) to preserve its stack and type.
+      throw error;
     }
   },
 };
