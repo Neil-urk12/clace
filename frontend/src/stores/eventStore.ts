@@ -461,19 +461,6 @@ export const useEventStore = defineStore("eventStore", () => {
     }
   }
 
-  /**
-   * Syncs events with external sources via API.
-   */
-  async function syncEvents() {
-    try {
-      const syncedEvents = await EventService.syncEvents();
-      events.value = syncedEvents;
-      return syncedEvents;
-    } catch (error) {
-      console.error('Failed to sync events:', error);
-      throw error;
-    }
-  }
 
   return {
     events,
@@ -497,6 +484,5 @@ export const useEventStore = defineStore("eventStore", () => {
     setActivePrimaryFilter,
     setActiveSecondaryFilter,
     refreshEvents,
-    syncEvents,
   };
 });

@@ -1,15 +1,15 @@
 import { Elysia } from 'elysia';
-import { EventController } from '../controllers/eventController';
+import { EventModel } from '../models/Event';
 import { authMiddleware } from '../middlewares/authMiddleware';
 
 export const eventRoutes = new Elysia({ prefix: '/api/events' })
   .use(authMiddleware)
 
   // GET /api/events - Get all events for authenticated user
-  .get('/', ({ userId }) => EventController.getAllEvents(userId))
+  .get('/', ({ userId }) => EventModel.getAllForUser(userId))
 
   // GET /api/events/:id - Get specific event by ID
-  .get('/:id', ({ params, userId }) => EventController.getEventById(params.id, userId))
+  .get('/:id', ({ params, userId }) => EventModel.getByIdForUser(params.id, userId))
 
   // POST /api/events - Create new event
   .post('/', ({ body, userId, set }) => {
@@ -21,7 +21,7 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       all_day: (body as any).allDay || false
     };
     set.status = 201;
-    return EventController.createEvent(eventData, userId);
+    return EventModel.createForUser(eventData, userId);
   })
 
   // PUT /api/events/:id - Update event
@@ -34,11 +34,11 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
     if ((body as any).endDate !== undefined) updateData.end_datetime = new Date((body as any).endDate);
     if ((body as any).allDay !== undefined) updateData.all_day = (body as any).allDay;
 
-    return EventController.updateEvent(params.id, userId, updateData);
+    return EventModel.updateForUser(params.id, updateData, userId);
   })
 
   // DELETE /api/events/:id - Delete event
-  .delete('/:id', ({ params, userId }) => EventController.deleteEvent(params.id, userId))
+  .delete('/:id', ({ params, userId }) => EventModel.deleteForUser(params.id, userId))
 
   // GET /api/events/filter - Get filtered events
   .get('/filter', ({ query, userId }) => {
@@ -47,11 +47,8 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
     if (query.startDate) filters.start_datetime = new Date(query.startDate as string);
     if (query.endDate) filters.end_datetime = new Date(query.endDate as string);
 
-    return EventController.getEventsByFilter(userId, filters);
+    return EventModel.filterForUser(filters, userId);
   })
-
-  // POST /api/events/sync - Sync events with external sources
-  .post('/sync', ({ userId }) => EventController.syncEvents(userId))
 
   // POST /api/events/bulk - Create multiple events
   .post('/bulk', ({ body, userId, set }) => {
@@ -63,8 +60,8 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       all_day: event.allDay || false
     }));
     set.status = 201;
-    return EventController.bulkCreateEvents(userId, eventsData);
+    return EventModel.bulkCreateForUser(eventsData, userId);
   })
 
   // DELETE /api/events - Delete all events for user
-  .delete('/', ({ userId }) => EventController.deleteAllEvents(userId));
+  .delete('/', ({ userId }) => EventModel.deleteAllForUser(userId));

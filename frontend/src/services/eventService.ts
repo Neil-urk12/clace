@@ -205,30 +205,4 @@ export class EventService {
             throw error;
         }
     }
-
-    static async syncEvents(): Promise<SharedEventItem[]> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/events/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...this.getAuthHeaders(),
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to sync events: ${response.statusText}`);
-            }
-
-            const { data } = await response.json();
-            return data.map((event: EventApiItem) => ({
-                ...event,
-                startDate: new Date(event.startDate),
-                endDate: event.endDate ? new Date(event.endDate) : undefined,
-            }));
-        } catch (error) {
-            console.error('Error syncing events:', error);
-            throw error;
-        }
-    }
 }
