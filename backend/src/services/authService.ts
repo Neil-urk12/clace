@@ -3,7 +3,15 @@ import type { JwtPayload } from 'jsonwebtoken';
 import { UserModel, CreateUserData, UserResponse } from '../models/User';
 import { ConflictError, UnauthorizedError } from '../lib/errors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+function loadJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return secret;
+}
+
+const JWT_SECRET = loadJwtSecret();
 // Convert time string to seconds for JWT library
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ? process.env.JWT_EXPIRES_IN : 86400; // 24 hours in seconds
 

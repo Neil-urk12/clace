@@ -30,6 +30,14 @@ Ensure you have [Bun](https://bun.sh/) installed on your system. Bun is used for
     make install
     ```
 
+3.  **Configure environment variables:**
+
+    Copy the example env file and fill in the values (a `JWT_SECRET` is required; the server will fail to start without it):
+
+    ```bash
+    cp backend/.env.example backend/.env
+    ```
+
 ## Project Structure
 
 The project is organized into two main directories:
