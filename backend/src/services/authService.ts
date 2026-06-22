@@ -1,6 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
 import { UserModel, CreateUserData, UserResponse } from '../models/User';
+import { ConflictError, UnauthorizedError } from '../lib/errors';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 // Convert time string to seconds for JWT library
@@ -45,13 +46,13 @@ export class AuthService {
     const user = await UserModel.findByEmail(credentials.email);
     
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const isPasswordValid = await UserModel.validatePassword(user, credentials.password);
-    
+
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const token = this.generateToken(user.user_id);
@@ -89,11 +90,16 @@ export class AuthService {
     }
   }
 
+  static async getUserById(userId: string) {
+    const user = await UserModel.findById(userId);
+    return user ? UserModel.toResponse(user) : null;
+  }
+
   static async register(userData: CreateUserData): Promise<AuthResponse> {
     const existingUser = await UserModel.findByEmail(userData.email);
     
     if (existingUser) {
-      throw new Error('Email already registered');
+      throw new ConflictError('Email already registered');
     }
 
     const user = await UserModel.create(userData);

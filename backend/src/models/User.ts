@@ -36,6 +36,15 @@ export class UserModel {
     return users.length > 0 ? users[0] : null;
   }
 
+  static async findById(userId: string): Promise<User | null> {
+    const [rows] = await pool.execute(
+      'SELECT * FROM users WHERE user_id = ?',
+      [userId]
+    );
+    const users = rows as User[];
+    return users.length > 0 ? users[0] : null;
+  }
+
   static async create(userData: CreateUserData): Promise<UserResponse> {
     const userId = uuidv4();
     const hashedPassword = await bcrypt.hash(userData.password, 10);

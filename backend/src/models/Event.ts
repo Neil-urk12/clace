@@ -1,5 +1,6 @@
 import pool from '../config/db_config';
 import { v4 as uuidv4 } from 'uuid';
+import { NotFoundError, ValidationError } from '../lib/errors';
 
 export interface Event {
   event_id: string;
@@ -132,7 +133,7 @@ export class EventModel {
     });
 
     if (fields.length === 0) {
-      throw new Error('No fields to update');
+      throw new ValidationError('No fields to update');
     }
 
     // Add updated_at field
@@ -145,7 +146,7 @@ export class EventModel {
     const updateResult = result as any;
     
     if (updateResult.affectedRows === 0) {
-      throw new Error('Event not found or no permission to update');
+      throw new NotFoundError('Event not found or no permission to update');
     }
 
     const updatedEvent = await this.findById(eventId, calendarId);

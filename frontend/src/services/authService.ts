@@ -8,7 +8,7 @@ const authService = {
   async login(credentials: LoginCredentials) {
     try {
       const response = await axios.post(`${API_URL}/login`, credentials);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw error.response?.data || error.message;
@@ -21,7 +21,7 @@ const authService = {
   async register(userData: RegisterPayloadBackend) {
     try {
       const response = await axios.post(`${API_URL}/register`, userData);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw error.response?.data || error.message;
@@ -38,7 +38,7 @@ const authService = {
         const response = await axios.post(`${API_URL}/logout`, { token }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        return response.data;
+        return response.data.data;
       }
       return { success: true };
     } catch (error) {
@@ -58,7 +58,7 @@ const authService = {
       const response = await axios.get(`${API_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      return response.data.user;
+      return response.data.data;
     } catch (error) {
       console.error('Get current user error:', error);
       if (axios.isAxiosError(error)) {

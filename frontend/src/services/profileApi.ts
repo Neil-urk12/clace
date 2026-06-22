@@ -16,12 +16,7 @@ export const profileApi = {
       const response = await axios.get(API_URL, {
         headers: getAuthHeader()
       })
-
-      if (response.data.success && response.data.profile) {
-        return response.data.profile
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch profile')
-      }
+      return response.data.data
     } catch (error) {
       console.error('Error fetching user profile:', error)
       if (axios.isAxiosError(error)) {
@@ -37,12 +32,7 @@ export const profileApi = {
       const response = await axios.patch(API_URL, updates, {
         headers: getAuthHeader()
       })
-
-      if (response.data.success && response.data.profile) {
-        return response.data.profile
-      } else {
-        throw new Error(response.data.message || 'Failed to update profile')
-      }
+      return response.data.data
     } catch (error) {
       console.error('Error updating user profile:', error)
       if (axios.isAxiosError(error)) {
@@ -64,7 +54,6 @@ export const profileApi = {
       }, {
         headers: getAuthHeader()
       })
-
       return response.data.success === true
     } catch (error) {
       console.error('Error updating password:', error)

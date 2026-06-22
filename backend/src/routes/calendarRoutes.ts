@@ -1,106 +1,56 @@
 import { Elysia } from 'elysia';
-import { CalendarController } from '../controllers/calendarController';
+import { CalendarModel, CreateCalendarData } from '../models/Calendar';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { ValidationError, ForbiddenError } from '../lib/errors';
 
 export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
   .use(authMiddleware)
-  
+
   // POST /api/calendars - Create new calendar
-  .post('/', async ({ body, userId, set }) => {
-    try {
-      const calendarData = {
-        calendar_name: (body as any).calendar_name,
-        creator_user_id: userId
-      };
-      
-      const result = await CalendarController.createCalendar(calendarData);
-      set.status = 201;
-      return result;
-    } catch (error: any) {
-      console.error('Create calendar error:', error);
-      set.status = 400;
-      return { 
-        success: false, 
-        message: error.message || 'Failed to create calendar'
-      };
-    }
+  .post('/', ({ body, userId, set }) => {
+    set.status = 201;
+    return CalendarModel.create({
+      calendar_name: (body as any).calendar_name,
+      creator_user_id: userId,
+    } as CreateCalendarData);
   })
 
   // GET /api/calendars/:id - Get calendar by ID
-  .get('/:id', async ({ params, set }) => {
-    try {
-      const result = await CalendarController.getCalendarById(params.id);
-      return result;
-    } catch (error: any) {
-      console.error('Get calendar by ID error:', error);
-      set.status = error.message.includes('not found') ? 404 : 500;
-      return { 
-        success: false, 
-        message: error.message || 'Failed to fetch calendar'
-      };
-    }
-  })
+  .get('/:id', ({ params }) => CalendarModel.findById(params.id))
 
   // GET /api/calendars/user/:userId - Get calendar by user ID
-  .get('/user/:userId', async ({ params, userId, set }) => {
-    try {
-      // Only allow users to get their own calendar or if they're authorized
-      if (params.userId !== userId) {
-        set.status = 403;
-        return { 
-          success: false, 
-          message: 'Not authorized to access this calendar'
-        };
-      }
-      
-      const result = await CalendarController.getCalendarByUserId(params.userId);
-      return result;
-    } catch (error: any) {
-      console.error('Get calendar by user ID error:', error);
-      set.status = 500;
-      return { 
-        success: false, 
-        message: error.message || 'Failed to fetch user calendar'
-      };
+  .get('/user/:userId', async ({ params, userId }) => {
+    if (params.userId !== userId) {
+      throw new ForbiddenError('Not authorized to access this calendar');
     }
+    const calendar = await CalendarModel.findByUserId(userId);
+    if (!calendar) return null;
+    return CalendarModel.toResponse(calendar);
   })
 
   // POST /api/calendars/join - Join calendar by join code
-  .post('/join', async ({ body, userId, set }) => {
-    try {
-      const { join_code } = body as any;
-      
-      if (!join_code) {
-        set.status = 400;
-        return { 
-          success: false, 
-          message: 'Join code is required'
-        };
-      }
-      
-      const result = await CalendarController.joinCalendarByCode(join_code, userId);
-      return result;
-    } catch (error: any) {
-      console.error('Join calendar error:', error);
-      set.status = 400;
-      return { 
-        success: false, 
-        message: error.message || 'Failed to join calendar'
-      };
+  .post('/join', async ({ body, userId }) => {
+    const { join_code } = body as { join_code?: string };
+    if (!join_code) {
+      throw new ValidationError('Join code is required');
     }
+
+    const calendar = await CalendarModel.findByJoinCode(join_code);
+    if (!calendar) {
+      throw new ValidationError('Invalid join code');
+    }
+
+    const existingMembership = await CalendarModel.getMembership(userId, calendar.calendar_id);
+    if (existingMembership) {
+      return CalendarModel.toResponse(calendar);
+    }
+
+    await CalendarModel.addMember(calendar.calendar_id, userId);
+    return CalendarModel.toResponse(calendar);
   })
 
   // GET /api/calendars - Get all calendars for authenticated user
-  .get('/', async ({ userId, set }) => {
-    try {
-      const result = await CalendarController.getUserCalendars(userId);
-      return result;
-    } catch (error: any) {
-      console.error('Get user calendars error:', error);
-      set.status = 500;
-      return { 
-        success: false, 
-        message: error.message || 'Failed to fetch calendars'
-      };
-    }
+  .get('/', async ({ userId }) => {
+    const calendars = await CalendarModel.getUserCalendars(userId);
+    return calendars.map((calendar) => CalendarModel.toResponse(calendar));
   });

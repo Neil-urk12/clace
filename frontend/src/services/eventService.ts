@@ -43,8 +43,8 @@ export class EventService {
                 throw new Error(`Failed to fetch events: ${response.statusText}`);
             }
 
-            const data: EventApiItem[] = await response.json();
-            return data.map((event) => ({
+            const { data } = await response.json();
+            return data.map((event: EventApiItem) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,
@@ -72,7 +72,7 @@ export class EventService {
                 throw new Error(`Failed to fetch event: ${response.statusText}`);
             }
 
-            const event = await response.json();
+            const { data: event } = await response.json();
             return {
                 ...event,
                 startDate: new Date(event.startDate),
@@ -104,7 +104,7 @@ export class EventService {
                 throw new Error(errorData.message || `Failed to create event: ${response.statusText}`);
             }
 
-            const event = await response.json();
+            const { data: event } = await response.json();
             return {
                 ...event,
                 startDate: new Date(event.startDate),
@@ -138,7 +138,7 @@ export class EventService {
                 throw new Error(errorData.message || `Failed to update event: ${response.statusText}`);
             }
 
-            const event = await response.json();
+            const { data: event } = await response.json();
             return {
                 ...event,
                 startDate: new Date(event.startDate),
@@ -194,8 +194,8 @@ export class EventService {
                 throw new Error(`Failed to fetch filtered events: ${response.statusText}`);
             }
 
-            const data: EventApiItem[] = await response.json();
-            return data.map((event) => ({
+            const { data } = await response.json();
+            return data.map((event: EventApiItem) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,
@@ -220,8 +220,8 @@ export class EventService {
                 throw new Error(`Failed to sync events: ${response.statusText}`);
             }
 
-            const data: EventApiItem[] = await response.json();
-            return data.map((event) => ({
+            const { data } = await response.json();
+            return data.map((event: EventApiItem) => ({
                 ...event,
                 startDate: new Date(event.startDate),
                 endDate: event.endDate ? new Date(event.endDate) : undefined,

@@ -1,32 +1,20 @@
 import { Elysia } from 'elysia';
-import { AuthController } from '../controllers/authController';
+import { AuthService } from '../services/authService';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 export const authRoutes = new Elysia({ prefix: '/api/auth' })
-  .post('/login', async ({ body, set }) => {
-    try {
-      console.log('Login attempt with body:', body);
-      const result = await AuthController.login(body as any);
-      return result;
-    } catch (error: any) {
-      console.error('Login error:', error);
-      set.status = 400;
-      return { 
-        success: false, 
-        message: error.message || 'Login failed'
-      };
-    }
-  })
-  .post('/register', async ({ body, set }) => {
-    try {
-      console.log('Register attempt with body:', body);
-      const result = await AuthController.register(body as any);
-      return result;
-    } catch (error: any) {
-      console.error('Register error:', error);
-      set.status = 400;
-      return { 
-        success: false, 
-        message: error.message || 'Registration failed'
-      };
-    }
+  .post('/login', async ({ body }) => AuthService.login(body as any))
+  .post('/register', async ({ body }) => AuthService.register(body as any));
+
+const protectedAuthRoutes = new Elysia()
+  .use(authMiddleware)
+  .post('/logout', ({ headers, userId }) =>
+    AuthService.logout((headers.authorization ?? '').replace('Bearer ', ''))
+  )
+  .get('/me', async ({ userId }) => {
+    const user = await AuthService.getUserById(userId);
+    if (!user) return null;
+    return user;
   });
+
+export const authProtectedRoutes = new Elysia({ prefix: '/api/auth' }).use(protectedAuthRoutes);

@@ -1,5 +1,6 @@
 import pool from '../config/db_config';
 import { User, UserModel } from './User';
+import { NotFoundError, ValidationError } from '../lib/errors';
 
 export interface UserProfile {
   name: string;
@@ -19,7 +20,7 @@ export class ProfileModel {
     const users = rows as User[];
     
     if (users.length === 0) {
-      throw new Error('User not found');
+      throw new NotFoundError('User not found');
     }
     
     const user = users[0];
@@ -93,7 +94,7 @@ export class ProfileModel {
     const isPasswordValid = await UserModel.validatePassword(user, currentPassword);
     
     if (!isPasswordValid) {
-      throw new Error('Current password is incorrect');
+      throw new ValidationError('Current password is incorrect');
     }
     
     // Hash the new password
