@@ -1,7 +1,15 @@
-import { Elysia } from 'elysia';
-import { CalendarModel, CreateCalendarData } from '../models/Calendar';
+import { Elysia, t } from 'elysia';
+import { CalendarModel } from '../models/Calendar';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import { ValidationError, ForbiddenError } from '../lib/errors';
+import { ForbiddenError, ValidationError } from '../lib/errors';
+
+const CreateCalendarBody = t.Object({
+  calendar_name: t.String(),
+});
+
+const JoinCalendarBody = t.Object({
+  join_code: t.String({ minLength: 1 }),
+});
 
 export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
   .use(authMiddleware)
@@ -10,9 +18,11 @@ export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
   .post('/', ({ body, userId, set }) => {
     set.status = 201;
     return CalendarModel.create({
-      calendar_name: (body as any).calendar_name,
+      calendar_name: body.calendar_name,
       creator_user_id: userId,
-    } as CreateCalendarData);
+    });
+  }, {
+    body: CreateCalendarBody,
   })
 
   // GET /api/calendars/:id - Get calendar by ID
@@ -29,13 +39,8 @@ export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
   })
 
   // POST /api/calendars/join - Join calendar by join code
-  .post('/join', async ({ body, userId }) => {
-    const { join_code } = body as { join_code?: string };
-    if (!join_code) {
-      throw new ValidationError('Join code is required');
-    }
-
-    const calendar = await CalendarModel.findByJoinCode(join_code);
+  .post('/join', async ({ userId, body }) => {
+    const calendar = await CalendarModel.findByJoinCode(body.join_code);
     if (!calendar) {
       throw new ValidationError('Invalid join code');
     }
@@ -47,6 +52,8 @@ export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
 
     await CalendarModel.addMember(calendar.calendar_id, userId);
     return CalendarModel.toResponse(calendar);
+  }, {
+    body: JoinCalendarBody,
   })
 
   // GET /api/calendars - Get all calendars for authenticated user

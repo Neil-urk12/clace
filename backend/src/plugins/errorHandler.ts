@@ -14,8 +14,10 @@ const isDomainError = (err: unknown): err is DomainError =>
 
 /**
  * Elysia onError plugin. Maps domain error classes to HTTP status codes
- * and the {success: false, message} response shape. Falls back to 500
- * for anything else, with a generic message (the real error is logged).
+ * and the {success: false, message} response shape. Routes Elysia's
+ * built-in schema validation errors to 400 with field-level details
+ * so a malformed body never surfaces as a 500. Falls back to 500 for
+ * anything else, with a generic message (the real error is logged).
  */
 export const errorHandler = (app: Elysia) =>
   app.onError(({ code, error, set }) => {
@@ -27,6 +29,16 @@ export const errorHandler = (app: Elysia) =>
       return {
         success: false,
         message: error.message,
+      };
+    }
+
+    if (code === 'VALIDATION') {
+      set.status = 400;
+      const e = error as any;
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: e.errors ?? e.message,
       };
     }
 

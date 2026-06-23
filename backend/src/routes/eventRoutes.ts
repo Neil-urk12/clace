@@ -1,6 +1,29 @@
-import { Elysia } from 'elysia';
-import { EventModel } from '../models/Event';
+import { Elysia, t } from 'elysia';
+import { EventModel, CreateEventInput, UpdateEventData } from '../models/Event';
 import { authMiddleware } from '../middlewares/authMiddleware';
+
+const CreateEventBody = t.Object({
+  title: t.String(),
+  description: t.Optional(t.String()),
+  startDate: t.Date(),
+  endDate: t.Date(),
+  allDay: t.Optional(t.Boolean()),
+});
+
+const UpdateEventBody = t.Partial(t.Object({
+  title: t.String(),
+  description: t.String(),
+  startDate: t.Date(),
+  endDate: t.Date(),
+  allDay: t.Boolean(),
+}));
+
+const BulkCreateBody = t.Array(CreateEventBody);
+
+const FilterQuery = t.Object({
+  startDate: t.Optional(t.Date()),
+  endDate: t.Optional(t.Date()),
+});
 
 export const eventRoutes = new Elysia({ prefix: '/api/events' })
   .use(authMiddleware)
@@ -13,28 +36,30 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
 
   // POST /api/events - Create new event
   .post('/', ({ body, userId, set }) => {
-    const eventData = {
-      title: (body as any).title,
-      description: (body as any).description,
-      start_datetime: new Date((body as any).startDate),
-      end_datetime: new Date((body as any).endDate),
-      all_day: (body as any).allDay || false
+    const eventData: CreateEventInput = {
+      title: body.title,
+      description: body.description,
+      start_datetime: body.startDate,
+      end_datetime: body.endDate,
+      all_day: body.allDay ?? false,
     };
     set.status = 201;
     return EventModel.createForUser(eventData, userId);
+  }, {
+    body: CreateEventBody,
   })
 
   // PUT /api/events/:id - Update event
   .put('/:id', ({ params, body, userId }) => {
-    const updateData: any = {};
-
-    if ((body as any).title !== undefined) updateData.title = (body as any).title;
-    if ((body as any).description !== undefined) updateData.description = (body as any).description;
-    if ((body as any).startDate !== undefined) updateData.start_datetime = new Date((body as any).startDate);
-    if ((body as any).endDate !== undefined) updateData.end_datetime = new Date((body as any).endDate);
-    if ((body as any).allDay !== undefined) updateData.all_day = (body as any).allDay;
-
+    const updateData: UpdateEventData = {};
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.startDate !== undefined) updateData.start_datetime = body.startDate;
+    if (body.endDate !== undefined) updateData.end_datetime = body.endDate;
+    if (body.allDay !== undefined) updateData.all_day = body.allDay;
     return EventModel.updateForUser(params.id, updateData, userId);
+  }, {
+    body: UpdateEventBody,
   })
 
   // DELETE /api/events/:id - Delete event
@@ -42,25 +67,27 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
 
   // GET /api/events/filter - Get filtered events
   .get('/filter', ({ query, userId }) => {
-    const filters: any = {};
-
-    if (query.startDate) filters.start_datetime = new Date(query.startDate as string);
-    if (query.endDate) filters.end_datetime = new Date(query.endDate as string);
-
+    const filters: { start_datetime?: Date; end_datetime?: Date } = {};
+    if (query.startDate) filters.start_datetime = query.startDate;
+    if (query.endDate) filters.end_datetime = query.endDate;
     return EventModel.filterForUser(filters, userId);
+  }, {
+    query: FilterQuery,
   })
 
   // POST /api/events/bulk - Create multiple events
   .post('/bulk', ({ body, userId, set }) => {
-    const eventsData = (body as any[]).map((event: any) => ({
+    const eventsData: CreateEventInput[] = body.map((event) => ({
       title: event.title,
       description: event.description,
-      start_datetime: new Date(event.startDate),
-      end_datetime: new Date(event.endDate),
-      all_day: event.allDay || false
+      start_datetime: event.startDate,
+      end_datetime: event.endDate,
+      all_day: event.allDay ?? false,
     }));
     set.status = 201;
     return EventModel.bulkCreateForUser(eventsData, userId);
+  }, {
+    body: BulkCreateBody,
   })
 
   // DELETE /api/events - Delete all events for user
