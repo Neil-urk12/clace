@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { SharedEventItem } from "../../types/event";
+import { isToday } from "@/events/datePredicates";
 import CalendarEventComponent from "./CalendarEvent.vue";
 
 interface Props {
@@ -114,15 +115,6 @@ const getAllDayEvents = (date: Date) => {
       event.allDay
     );
   });
-};
-
-const isToday = (date: Date) => {
-  const today = new Date();
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
 };
 
 const isHighlighted = (date: Date) => {

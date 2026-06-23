@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { SharedEventItem } from "../../types/event";
+import { isToday } from "@/events/datePredicates";
 
 interface Props {
   currentDate: Date;
@@ -65,18 +66,10 @@ const monthDays = computed(() => {
   return days;
 });
 
-const isToday = (date: Date): boolean => {
-  const today = new Date();
-  return isSameDay(date, today);
-};
-
-const isSameDay = (date1: Date, date2: Date): boolean => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-};
+const isSameDay = (a: Date, b: Date): boolean =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 const hasEventsOnDate = (date: Date): boolean => {
   return props.events.some((event) => {
