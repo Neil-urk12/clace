@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import { ClockIcon, MapPinIcon, CheckCircle2Icon, BookIcon } from 'lucide-vue-next';
-import type { SharedEventItem } from '@/types/event'; // Corrected import path
+import type { SharedEventItem } from '@/types/event';
 
 interface Props {
   activity?: SharedEventItem;
   loading?: boolean;
 }
 defineProps<Props>();
+
+const router = useRouter();
 
 const getStatusIcon = (status?: SharedEventItem['status']) => {
   if (status === 'Completed' || status === 'Graded' || status === 'Submitted') {
@@ -19,10 +22,14 @@ const formatDate = (date: Date): string => {
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(date).toLocaleDateString(undefined, options);
 };
+
+const navigateToCalendar = () => {
+  router.push('/calendar');
+};
 </script>
 
 <template>
-  <div class="event-card" :class="[activity?.type?.toLowerCase(), { 'skeleton': loading }]">
+  <div class="event-card" :class="[activity?.type?.toLowerCase(), { 'skeleton': loading }]" @click="navigateToCalendar" role="button" tabindex="0" @keydown.enter="navigateToCalendar">
     <template v-if="loading">
       <div class="card-image-container">
         <div class="skeleton-box skeleton-image"></div>
@@ -110,6 +117,7 @@ const formatDate = (date: Date): string => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
+  cursor: pointer;
 }
 
 .event-card::before {

@@ -11,6 +11,13 @@ export const events = pgTable('events', {
   startDatetime: timestamp('start_datetime').notNull(),
   endDatetime: timestamp('end_datetime').notNull(),
   allDay: boolean('all_day').default(false),
+  type: text('type').default('GeneralActivity'),
+  subject: text('subject'),
+  course: text('course'),
+  status: text('status').default('Scheduled'),
+  location: text('location'),
+  imageUrl: text('image_url'),
+  color: text('color').default('#3b82f6'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

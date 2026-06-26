@@ -13,6 +13,13 @@ export interface Event {
   startDatetime: Date;
   endDatetime: Date;
   allDay: boolean;
+  type: string | null;
+  subject: string | null;
+  course: string | null;
+  status: string | null;
+  location: string | null;
+  imageUrl: string | null;
+  color: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +32,13 @@ export interface CreateEventData {
   start_datetime: Date;
   end_datetime: Date;
   all_day: boolean;
+  type?: string;
+  subject?: string;
+  course?: string;
+  status?: string;
+  location?: string;
+  image_url?: string;
+  color?: string;
 }
 
 /** Shape the routes pass in. The model fills in calendar_id and creator_user_id. */
@@ -36,6 +50,13 @@ export interface UpdateEventData {
   start_datetime?: Date;
   end_datetime?: Date;
   all_day?: boolean;
+  type?: string;
+  subject?: string;
+  course?: string;
+  status?: string;
+  location?: string;
+  image_url?: string;
+  color?: string;
 }
 
 export interface EventResponse {
@@ -182,6 +203,13 @@ export class EventModel {
         startDatetime: eventData.start_datetime,
         endDatetime: eventData.end_datetime,
         allDay: eventData.all_day,
+        type: eventData.type || null,
+        subject: eventData.subject || null,
+        course: eventData.course || null,
+        status: eventData.status || null,
+        location: eventData.location || null,
+        imageUrl: eventData.image_url || null,
+        color: eventData.color || null,
       })
       .returning();
 
@@ -196,6 +224,13 @@ export class EventModel {
     if (updateData.start_datetime !== undefined) updateFields.startDatetime = updateData.start_datetime;
     if (updateData.end_datetime !== undefined) updateFields.endDatetime = updateData.end_datetime;
     if (updateData.all_day !== undefined) updateFields.allDay = updateData.all_day;
+    if (updateData.type !== undefined) updateFields.type = updateData.type;
+    if (updateData.subject !== undefined) updateFields.subject = updateData.subject;
+    if (updateData.course !== undefined) updateFields.course = updateData.course;
+    if (updateData.status !== undefined) updateFields.status = updateData.status;
+    if (updateData.location !== undefined) updateFields.location = updateData.location;
+    if (updateData.image_url !== undefined) updateFields.imageUrl = updateData.image_url;
+    if (updateData.color !== undefined) updateFields.color = updateData.color;
 
     if (Object.keys(updateFields).length === 0) {
       throw new ValidationError('No fields to update');
@@ -242,9 +277,13 @@ export class EventModel {
       startDate: event.startDatetime,
       endDate: event.endDatetime,
       allDay: event.allDay,
-      type: 'GeneralActivity',
-      status: 'Scheduled',
-      color: '#3b82f6',
+      type: (event.type as EventResponse['type']) ?? 'GeneralActivity',
+      subject: event.subject ?? undefined,
+      course: event.course ?? undefined,
+      status: (event.status as EventResponse['status']) ?? 'Scheduled',
+      location: event.location ?? undefined,
+      imageUrl: event.imageUrl ?? undefined,
+      color: event.color ?? '#3b82f6',
     };
   }
 

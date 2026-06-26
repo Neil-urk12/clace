@@ -8,6 +8,13 @@ const CreateEventBody = t.Object({
   startDate: t.Date(),
   endDate: t.Date(),
   allDay: t.Optional(t.Boolean()),
+  type: t.Optional(t.String()),
+  subject: t.Optional(t.String()),
+  course: t.Optional(t.String()),
+  status: t.Optional(t.String()),
+  location: t.Optional(t.String()),
+  imageUrl: t.Optional(t.String()),
+  color: t.Optional(t.String()),
 });
 
 const UpdateEventBody = t.Partial(t.Object({
@@ -16,6 +23,13 @@ const UpdateEventBody = t.Partial(t.Object({
   startDate: t.Date(),
   endDate: t.Date(),
   allDay: t.Boolean(),
+  type: t.String(),
+  subject: t.String(),
+  course: t.String(),
+  status: t.String(),
+  location: t.String(),
+  imageUrl: t.String(),
+  color: t.String(),
 }));
 
 const BulkCreateBody = t.Array(CreateEventBody);
@@ -42,6 +56,13 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       start_datetime: body.startDate,
       end_datetime: body.endDate,
       all_day: body.allDay ?? false,
+      type: body.type,
+      subject: body.subject,
+      course: body.course,
+      status: body.status,
+      location: body.location,
+      image_url: body.imageUrl,
+      color: body.color,
     };
     set.status = 201;
     return EventModel.createForUser(eventData, userId);
@@ -57,6 +78,13 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
     if (body.startDate !== undefined) updateData.start_datetime = body.startDate;
     if (body.endDate !== undefined) updateData.end_datetime = body.endDate;
     if (body.allDay !== undefined) updateData.all_day = body.allDay;
+    if (body.type !== undefined) updateData.type = body.type;
+    if (body.subject !== undefined) updateData.subject = body.subject;
+    if (body.course !== undefined) updateData.course = body.course;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.location !== undefined) updateData.location = body.location;
+    if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
+    if (body.color !== undefined) updateData.color = body.color;
     return EventModel.updateForUser(params.id, updateData, userId);
   }, {
     body: UpdateEventBody,
@@ -83,6 +111,13 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       start_datetime: event.startDate,
       end_datetime: event.endDate,
       all_day: event.allDay ?? false,
+      type: event.type,
+      subject: event.subject,
+      course: event.course,
+      status: event.status,
+      location: event.location,
+      image_url: event.imageUrl,
+      color: event.color,
     }));
     set.status = 201;
     return EventModel.bulkCreateForUser(eventsData, userId);
