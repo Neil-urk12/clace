@@ -1,4 +1,4 @@
-.PHONY: install-backend install-frontend install dev-backend dev-frontend dev
+.PHONY: install-backend install-frontend install dev-backend dev-frontend dev db-generate db-migrate db-push db-studio
 
 install-backend:
 	cd backend && bun install
@@ -16,3 +16,15 @@ dev-frontend:
 
 dev:
 	$(MAKE) dev-backend & $(MAKE) dev-frontend
+
+db-generate:
+	cd backend && bun run db:generate
+
+db-migrate:
+	cd backend && bun run db:migrate
+
+db-push:
+	cd backend && bun run db:push
+
+db-studio:
+	cd backend && bun run db:studio
