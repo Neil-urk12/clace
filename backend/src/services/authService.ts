@@ -63,7 +63,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const token = this.generateToken(user.user_id);
+    const token = this.generateToken(user.id);
     const userResponse = UserModel.toResponse(user);
 
     return {

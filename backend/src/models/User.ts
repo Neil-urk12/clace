@@ -1,15 +1,16 @@
-import pool from '../config/db_config';
-import { v4 as uuidv4 } from 'uuid';
+import { eq } from 'drizzle-orm';
+import { db } from '../config/drizzle';
+import { users } from '../config/schema';
 import bcrypt from 'bcryptjs';
 
 export interface User {
-  user_id: string;
-  full_name: string;
+  id: string;
+  fullName: string;
   email: string;
-  password_hash: string;
-  is_class_president: boolean;
-  created_at: Date;
-  updated_at: Date;
+  passwordHash: string;
+  isClassPresident: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreateUserData {
@@ -28,50 +29,44 @@ export interface UserResponse {
 
 export class UserModel {
   static async findByEmail(email: string): Promise<User | null> {
-    const [rows] = await pool.execute(
-      'SELECT * FROM users WHERE email = ?',
-      [email]
-    );
-    const users = rows as User[];
-    return users.length > 0 ? users[0] : null;
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result.length > 0 ? (result[0] as User) : null;
   }
 
   static async findById(userId: string): Promise<User | null> {
-    const [rows] = await pool.execute(
-      'SELECT * FROM users WHERE user_id = ?',
-      [userId]
-    );
-    const users = rows as User[];
-    return users.length > 0 ? users[0] : null;
+    const result = await db.select().from(users).where(eq(users.id, userId));
+    return result.length > 0 ? (result[0] as User) : null;
   }
 
   static async create(userData: CreateUserData): Promise<UserResponse> {
-    const userId = uuidv4();
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
-    await pool.execute(
-      'INSERT INTO users (user_id, full_name, email, password_hash, is_class_president) VALUES (?, ?, ?, ?, ?)',
-      [userId, userData.full_name, userData.email, hashedPassword, userData.is_class_president]
-    );
+    const [created] = await db
+      .insert(users)
+      .values({
+        fullName: userData.full_name,
+        email: userData.email,
+        passwordHash: await bcrypt.hash(userData.password, 10),
+        isClassPresident: userData.is_class_president,
+      })
+      .returning();
 
     return {
-      user_id: userId,
-      full_name: userData.full_name,
-      email: userData.email,
-      is_class_president: userData.is_class_president
+      user_id: created.id,
+      full_name: created.fullName,
+      email: created.email,
+      is_class_president: created.isClassPresident ?? false,
     };
   }
 
   static async validatePassword(user: User, password: string): Promise<boolean> {
-    return bcrypt.compare(password, user.password_hash);
+    return bcrypt.compare(password, user.passwordHash);
   }
 
   static toResponse(user: User): UserResponse {
     return {
-      user_id: user.user_id,
-      full_name: user.full_name,
+      user_id: user.id,
+      full_name: user.fullName,
       email: user.email,
-      is_class_president: user.is_class_president
+      is_class_president: user.isClassPresident,
     };
   }
 }

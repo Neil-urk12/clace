@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import "../src/config/db_config";
+import './config/drizzle';
 import { authRoutes, authProtectedRoutes } from "./routes/authRoutes";
 import { eventRoutes } from "./routes/eventRoutes";
 import { calendarRoutes } from "./routes/calendarRoutes";

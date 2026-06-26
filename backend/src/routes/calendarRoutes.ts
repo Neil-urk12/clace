@@ -45,12 +45,12 @@ export const calendarRoutes = new Elysia({ prefix: '/api/calendars' })
       throw new ValidationError('Invalid join code');
     }
 
-    const existingMembership = await CalendarModel.getMembership(userId, calendar.calendar_id);
+    const existingMembership = await CalendarModel.getMembership(userId, calendar.id);
     if (existingMembership) {
       return CalendarModel.toResponse(calendar);
     }
 
-    await CalendarModel.addMember(calendar.calendar_id, userId);
+    await CalendarModel.addMember(calendar.id, userId);
     return CalendarModel.toResponse(calendar);
   }, {
     body: JoinCalendarBody,

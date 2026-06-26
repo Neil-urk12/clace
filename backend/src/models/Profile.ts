@@ -1,6 +1,9 @@
-import pool from '../config/db_config';
-import { User, UserModel } from './User';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { db } from '../config/drizzle';
+import { users } from '../config/schema';
 import { NotFoundError, ValidationError } from '../lib/errors';
+import { UserModel, User } from './User';
 
 export interface UserProfile {
   name: string;
@@ -12,101 +15,73 @@ export interface UserProfile {
 
 export class ProfileModel {
   static async getUserProfile(userId: string): Promise<UserProfile> {
-    // Get the user from the database
-    const [rows] = await pool.execute(
-      'SELECT * FROM users WHERE user_id = ?',
-      [userId]
-    );
-    const users = rows as User[];
-    
-    if (users.length === 0) {
+    const result = await db.select().from(users).where(eq(users.id, userId));
+
+    if (result.length === 0) {
       throw new NotFoundError('User not found');
     }
-    
-    const user = users[0];
-    
-    // Format the join date
-    const joinDate = new Date(user.created_at).toLocaleDateString('en-US', {
+
+    const user = result[0] as User;
+
+    const joinDate = new Date(user.createdAt).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long'
+      month: 'long',
     });
-    
-    // Determine role based on is_class_president flag
-    const role = user.is_class_president ? 'Class President' : 'Student';
-    
-    // Use default avatar
+
+    const role = user.isClassPresident ? 'Class President' : 'Student';
     const avatar = '/api/placeholder/150/150';
-    
+
     return {
-      name: user.full_name,
+      name: user.fullName,
       email: user.email,
       avatar,
       role,
-      joinDate
+      joinDate,
     };
   }
-  
-  static async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
-    // Start a transaction
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-      
-      // Update the user's name if provided
-      if (updates.name) {
-        await connection.execute(
-          'UPDATE users SET full_name = ?, updated_at = NOW() WHERE user_id = ?',
-          [updates.name, userId]
-        );
-      }
-      
-      // Note: Avatar functionality removed as per requirements
-      
-      await connection.commit();
-      
-      // Return the updated profile
-      return await this.getUserProfile(userId);
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
-  }
-  
 
-  
+  static async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+    await db.transaction(async (tx) => {
+      if (updates.name) {
+        await tx
+          .update(users)
+          .set({
+            fullName: updates.name,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId));
+      }
+    });
+
+    return await this.getUserProfile(userId);
+  }
+
   static async updatePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-    // Get the user from the database
-    const [rows] = await pool.execute(
-      'SELECT * FROM users WHERE user_id = ?',
-      [userId]
-    );
-    const users = rows as User[];
-    
-    if (users.length === 0) {
+    const result = await db.select().from(users).where(eq(users.id, userId));
+    const userRows = result as User[];
+
+    if (userRows.length === 0) {
       throw new Error('User not found');
     }
-    
-    const user = users[0];
-    
-    // Validate the current password
+
+    const user = userRows[0];
+
     const isPasswordValid = await UserModel.validatePassword(user, currentPassword);
-    
+
     if (!isPasswordValid) {
       throw new ValidationError('Current password is incorrect');
     }
-    
-    // Hash the new password
-    const bcrypt = await import('bcryptjs');
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    // Update the password
-    await pool.execute(
-      'UPDATE users SET password_hash = ?, updated_at = NOW() WHERE user_id = ?',
-      [hashedPassword, userId]
-    );
-    
+
+    await db
+      .update(users)
+      .set({
+        passwordHash: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
     return true;
   }
 }
