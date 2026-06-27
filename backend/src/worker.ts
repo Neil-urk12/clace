@@ -1,4 +1,6 @@
-import { CloudflareAdapter } from 'elysia/adapter/cloudflare-worker';
-import { createApp } from './core/app';
+// backend/src/worker.ts
 
-export default createApp(CloudflareAdapter);
+import { CloudflareAdapter } from 'elysia/adapter/cloudflare-worker';
+import { app } from './core/app';
+
+export default CloudflareAdapter(app);
