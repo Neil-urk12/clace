@@ -1,22 +1,21 @@
-import * as jwt from 'jsonwebtoken';
-import type { JwtPayload } from 'jsonwebtoken';
+// backend/src/services/authService.ts
+
+import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { UserModel, CreateUserData, UserResponse } from '../models/User';
 import { ConflictError, UnauthorizedError } from '../lib/errors';
+import { getConfig } from '../core/config';
 
-function loadJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  return secret;
+interface TokenPayload extends JWTPayload {
+  userId: string;
 }
 
-const JWT_SECRET = loadJwtSecret();
-// Convert time string to seconds for JWT library
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ? process.env.JWT_EXPIRES_IN : 86400; // 24 hours in seconds
+function getJwtSecret(): Uint8Array {
+  const config = getConfig();
+  return new TextEncoder().encode(config.JWT_SECRET);
+}
 
 // In-memory token blacklist
-// In a production environment, this should be replaced with a Redis cache or database
+// In a prod env, this should be replaced with a Redis cache or db
 const tokenBlacklist = new Set<string>();
 
 export interface LoginCredentials {
@@ -30,40 +29,43 @@ export interface AuthResponse {
 }
 
 export class AuthService {
-  static generateToken(userId: string): string {
-    const payload = { userId };
-    // Using numeric value for expiresIn to avoid type issues
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: Number(JWT_EXPIRES_IN) });
+  static async generateToken(userId: string): Promise<string> {
+    const config = getConfig();
+    const secret = getJwtSecret();
+
+    return new SignJWT({ userId } as TokenPayload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(`${config.JWT_EXPIRES_IN}s`)
+      .sign(secret);
   }
 
-  static verifyToken(token: string): { userId: string } | null {
+  static async verifyToken(token: string): Promise<TokenPayload | null> {
+    // Check if token is blacklisted
+    if (tokenBlacklist.has(token)) {
+      return null;
+    }
+
     try {
-      // Check if token is blacklisted
-      if (tokenBlacklist.has(token)) {
-        return null;
-      }
-      
-      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload & { userId: string };
-      return decoded;
-    } catch (error) {
+      const { payload } = await jwtVerify(token, getJwtSecret());
+      return payload as TokenPayload;
+    } catch {
       return null;
     }
   }
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const user = await UserModel.findByEmail(credentials.email);
-    
     if (!user) {
       throw new UnauthorizedError('Invalid email or password');
     }
 
     const isPasswordValid = await UserModel.validatePassword(user, credentials.password);
-
     if (!isPasswordValid) {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const token = this.generateToken(user.id);
+    const token = await AuthService.generateToken(user.id);
     const userResponse = UserModel.toResponse(user);
 
     return {
@@ -74,25 +76,23 @@ export class AuthService {
 
   static async logout(token: string): Promise<{ success: boolean }> {
     try {
-      // Verify the token is valid before blacklisting
-      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-      
+      const { payload } = await jwtVerify(token, getJwtSecret());
+
       // Add token to blacklist
       tokenBlacklist.add(token);
-      
-      // If we have expiry information, we can set up automatic cleanup
-      if (decoded.exp) {
-        const timeUntilExpiry = decoded.exp * 1000 - Date.now();
+
+      // If we have expiry info, we can set up automatic cleanup
+      if (payload.exp) {
+        const timeUntilExpiry = payload.exp * 1000 - Date.now();
         if (timeUntilExpiry > 0) {
-          // Remove from blacklist after token expires to prevent memory leaks
           setTimeout(() => {
             tokenBlacklist.delete(token);
           }, timeUntilExpiry);
         }
       }
-      
+
       return { success: true };
-    } catch (error) {
+    } catch {
       // If token is already invalid, just return success
       return { success: true };
     }
@@ -105,17 +105,16 @@ export class AuthService {
 
   static async register(userData: CreateUserData): Promise<AuthResponse> {
     const existingUser = await UserModel.findByEmail(userData.email);
-    
     if (existingUser) {
       throw new ConflictError('Email already registered');
     }
 
     const user = await UserModel.create(userData);
-    const token = this.generateToken(user.user_id);
+    const token = await AuthService.generateToken(user.id);
 
     return {
       token,
-      user
+      user: UserModel.toResponse(user)
     };
   }
 }
