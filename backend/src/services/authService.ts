@@ -110,11 +110,11 @@ export class AuthService {
     }
 
     const user = await UserModel.create(userData);
-    const token = await AuthService.generateToken(user.id);
+    const token = await AuthService.generateToken(user.user_id);
 
     return {
       token,
-      user: UserModel.toResponse(user)
+      user
     };
   }
 }
