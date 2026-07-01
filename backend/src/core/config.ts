@@ -1,5 +1,14 @@
 // backend/src/core/config.ts
 
+/** Cloudflare Workers env bindings. */
+export interface Env {
+  DATABASE_URL: string;
+  JWT_SECRET: string;
+  JWT_EXPIRES_IN?: string;
+  /** KV namespace for JWT token blacklist (Workers only). */
+  TOKEN_BLACKLIST?: KVNamespace;
+}
+
 export interface Config {
   DATABASE_URL: string;
   JWT_SECRET: string;
@@ -11,7 +20,7 @@ export interface Config {
  * In Workers, pass env bindings explicitly.
  * In Bun, reads process.env directly.
  */
-export function getConfig(env?: Record<string, string>): Config {
+export function getConfig(env?: Env | Record<string, string>): Config {
   const source = env ?? process.env;
 
   const DATABASE_URL = source.DATABASE_URL;

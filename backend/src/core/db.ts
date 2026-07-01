@@ -1,43 +1,49 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+// backend/src/core/db.ts
+//
+// Unified DB factory for both Bun (pg TCP) and Workers (Neon HTTP) runtimes.
+
+import { drizzle as drizzleNode } from 'drizzle-orm/node-postgres';
 import * as schema from '../config/schema';
-import { getConfig } from './config';
 
-export type DbInstance = ReturnType<typeof createDb>;
+// ---------- Type ----------
 
-function createDb(databaseUrl: string) {
-  // Use pg for Bun (TCP connections)
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Pool } = require('pg') as typeof import('pg');
-  const pool = new Pool({ connectionString: databaseUrl });
-  return { db: drizzle(pool, { schema }), pool };
-}
+/** The drizzle instance type used throughout the app. */
+export type AppDb = ReturnType<typeof drizzleNode<typeof schema>>;
 
-// Lazy singleton for Bun runtime
-let _db: DbInstance | null = null;
+// ---------- Bun singleton (TCP via pg) ----------
+
+let _bunDb: AppDb | null = null;
 
 /**
- * Get DB instance for Bun runtime.
- * Uses pg TCP driver.
+ * Lazy singleton for the Bun runtime.
+ * Uses the pg TCP driver.
  */
-export function getDb(): DbInstance {
-  if (!_db) {
-    const config = getConfig();
-    _db = createDb(config.DATABASE_URL);
+export function getBunDb(databaseUrl: string): AppDb {
+  if (!_bunDb) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pool } = require('pg') as typeof import('pg');
+    const pool = new Pool({ connectionString: databaseUrl });
+    _bunDb = drizzleNode(pool, { schema });
   }
-  return _db;
+  return _bunDb;
 }
 
+// ---------- Workers factory (HTTP via Neon) ----------
+
 /**
- * Get DB instance for Workers runtime.
- * Uses Neon serverless HTTP driver.
+ * Create a drizzle instance for the Cloudflare Workers runtime.
+ * Uses the Neon serverless HTTP driver (no TCP sockets).
  */
-export async function getWorkersDb(databaseUrl: string) {
+export async function createWorkersDb(databaseUrl: string): Promise<AppDb> {
   const { neon } = await import('@neondatabase/serverless');
   const { drizzle: drizzleNeon } = await import('drizzle-orm/neon-http');
 
   const sql = neon(databaseUrl);
-  return drizzleNeon(sql, { schema });
+  // neon-http returns NeonHttpDatabase which is API-compatible with NodePgDatabase
+  // for all operations our models use (select, insert, update, delete, transaction).
+  return drizzleNeon(sql, { schema }) as unknown as AppDb;
 }
 
-// Re-export schema for convenience
+// ---------- Schema re-export ----------
+
 export { schema };
