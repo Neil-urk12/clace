@@ -6,16 +6,14 @@
  *   - GET /filter validates query params
  */
 import { describe, test, expect } from 'bun:test';
-import { Elysia } from 'elysia';
-import { errorHandler } from '../../plugins/errorHandler';
-import { eventRoutes } from '../eventRoutes';
+import { createApp } from '../../core/app';
 import { AuthService } from '../../services/authService';
+import { getConfig } from '../../core/config';
 
-const TOKEN = AuthService.generateToken('00000000-0000-0000-0000-000000000000');
+const config = getConfig();
+const TOKEN = await AuthService.generateToken('00000000-0000-0000-0000-000000000000', config);
 
-const app = new Elysia()
-  .use(errorHandler)
-  .use(eventRoutes);
+const app = createApp();
 
 const authed = (path: string, init: RequestInit = {}): Request =>
   new Request(`http://localhost${path}`, {
@@ -62,14 +60,10 @@ describe('eventRoutes — POST /api/events', () => {
 
 describe('eventRoutes — PUT /api/events/:id', () => {
   test('empty body is allowed (partial update, no fields to update)', async () => {
-    // Schema accepts {}; the handler still hands it to the model which
-    // throws 'No fields to update' ValidationError. Proves the schema
-    // passed and the request reached the handler.
     const res = await app.handle(authed('/api/events/00000000-0000-0000-0000-000000000000', {
       method: 'PUT',
       body: JSON.stringify({}),
     }));
-    // Schema doesn't reject. Either model returns 4xx (validation) or 5xx (DB).
     expect(res.status).not.toBe(400);
   });
 
@@ -82,8 +76,6 @@ describe('eventRoutes — PUT /api/events/:id', () => {
   });
 
   test('startDate with bad type → 400', async () => {
-    // Note: t.Date accepts numbers as epoch ms by design, so we use an
-    // object — clearly outside the date-time union.
     const res = await app.handle(authed('/api/events/00000000-0000-0000-0000-000000000000', {
       method: 'PUT',
       body: JSON.stringify({ startDate: { not: 'a date' } }),
@@ -94,8 +86,6 @@ describe('eventRoutes — PUT /api/events/:id', () => {
 
 describe('eventRoutes — POST /api/events/bulk', () => {
   test('empty array passes schema (model concern, not shape)', async () => {
-    // Schema accepts []; the model either accepts and inserts nothing or
-    // returns an empty array. Either way schema passes — and DB is down.
     const res = await app.handle(authed('/api/events/bulk', {
       method: 'POST',
       body: JSON.stringify([]),
