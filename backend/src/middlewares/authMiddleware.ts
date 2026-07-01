@@ -1,9 +1,11 @@
 import { Elysia } from 'elysia';
 import { AuthService } from '../services/authService';
 import { UnauthorizedError } from '../lib/errors';
+import type { RouteContext } from '../types/context';
 
 export const authMiddleware = (app: Elysia) =>
-  app.derive<{ userId: string }>(async ({ headers }) => {
+  app.derive<{ userId: string }>(async (ctx: any) => {
+    const { headers, config, blacklist } = ctx as RouteContext;
     const authorization = headers.authorization;
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -11,7 +13,8 @@ export const authMiddleware = (app: Elysia) =>
     }
 
     const token = authorization.slice(7);
-    const decoded = await AuthService.verifyToken(token);
+    // config and blacklist are injected by the parent app's .derive() in app.ts
+    const decoded = await AuthService.verifyToken(token, config, blacklist);
 
     if (!decoded) {
       throw new UnauthorizedError('Invalid or expired token');

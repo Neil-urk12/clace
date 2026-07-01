@@ -6,9 +6,36 @@ import { calendarRoutes } from '../routes/calendarRoutes';
 import { profileRoutes } from '../routes/profileRoutes';
 import { successWrap } from '../plugins/successWrap';
 import { errorHandler } from '../plugins/errorHandler';
+import { getConfig, type Env } from './config';
+import { getBunDb, createWorkersDb } from './db';
+import { InMemoryTokenBlacklist, KvTokenBlacklist, type TokenBlacklist } from '../services/tokenBlacklist';
 
-export const createApp = (adapter?: ElysiaAdapter) =>
-  new Elysia({ adapter })
+/**
+ * Create the Elysia app with dependency injection.
+ *
+ * `db` and `config` are injected into every request context via a single
+ * `.derive()` at the top of the chain. All routes composed after it have
+ * access to these properties.
+ */
+export const createApp = (env?: Env | Record<string, string>, adapter?: ElysiaAdapter) => {
+  const config = getConfig(env);
+
+  // Token blacklist: KV-backed for Workers (cross-isolate), in-memory for Bun.
+  const blacklist: TokenBlacklist = (env as Env)?.TOKEN_BLACKLIST
+    ? new KvTokenBlacklist((env as Env).TOKEN_BLACKLIST!, config.JWT_EXPIRES_IN)
+    : new InMemoryTokenBlacklist();
+
+  return new Elysia({ adapter })
+    // Inject db, config, and blacklist into every request context.
+    // Workers: fresh Neon HTTP db per-request (stateless HTTP).
+    // Bun: lazy TCP singleton (pg pool).
+    .derive(async () => {
+      const db = env
+        ? await createWorkersDb(config.DATABASE_URL)
+        : getBunDb(config.DATABASE_URL);
+
+      return { db, config, blacklist };
+    })
     .use(cors())
     .use(successWrap)
     .use(errorHandler)
@@ -18,5 +45,7 @@ export const createApp = (adapter?: ElysiaAdapter) =>
     .use(calendarRoutes)
     .use(profileRoutes)
     .get('/', () => 'Backend is running');
+};
 
+/** Default app for Bun dev (reads process.env). */
 export const app = createApp();

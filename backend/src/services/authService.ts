@@ -3,20 +3,17 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { UserModel, CreateUserData, UserResponse } from '../models/User';
 import { ConflictError, UnauthorizedError } from '../lib/errors';
-import { getConfig } from '../core/config';
+import type { Config } from '../core/config';
+import type { AppDb } from '../core/db';
+import type { TokenBlacklist } from './tokenBlacklist';
 
 interface TokenPayload extends JWTPayload {
   userId: string;
 }
 
-function getJwtSecret(): Uint8Array {
-  const config = getConfig();
+function getJwtSecret(config: Config): Uint8Array {
   return new TextEncoder().encode(config.JWT_SECRET);
 }
-
-// In-memory token blacklist
-// In a prod env, this should be replaced with a Redis cache or db
-const tokenBlacklist = new Set<string>();
 
 export interface LoginCredentials {
   email: string;
@@ -29,9 +26,8 @@ export interface AuthResponse {
 }
 
 export class AuthService {
-  static async generateToken(userId: string): Promise<string> {
-    const config = getConfig();
-    const secret = getJwtSecret();
+  static async generateToken(userId: string, config: Config): Promise<string> {
+    const secret = getJwtSecret(config);
 
     return new SignJWT({ userId } as TokenPayload)
       .setProtectedHeader({ alg: 'HS256' })
@@ -40,22 +36,22 @@ export class AuthService {
       .sign(secret);
   }
 
-  static async verifyToken(token: string): Promise<TokenPayload | null> {
-    // Check if token is blacklisted
-    if (tokenBlacklist.has(token)) {
+  static async verifyToken(token: string, config: Config, blacklist: TokenBlacklist): Promise<TokenPayload | null> {
+    // Check if token has been revoked
+    if (await blacklist.has(token)) {
       return null;
     }
 
     try {
-      const { payload } = await jwtVerify(token, getJwtSecret());
+      const { payload } = await jwtVerify(token, getJwtSecret(config));
       return payload as TokenPayload;
     } catch {
       return null;
     }
   }
 
-  static async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const user = await UserModel.findByEmail(credentials.email);
+  static async login(db: AppDb, credentials: LoginCredentials, config: Config): Promise<AuthResponse> {
+    const user = await UserModel.findByEmail(db, credentials.email);
     if (!user) {
       throw new UnauthorizedError('Invalid email or password');
     }
@@ -65,7 +61,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const token = await AuthService.generateToken(user.id);
+    const token = await AuthService.generateToken(user.id, config);
     const userResponse = UserModel.toResponse(user);
 
     return {
@@ -74,22 +70,13 @@ export class AuthService {
     };
   }
 
-  static async logout(token: string): Promise<{ success: boolean }> {
+  static async logout(token: string, config: Config, blacklist: TokenBlacklist): Promise<{ success: boolean }> {
     try {
-      const { payload } = await jwtVerify(token, getJwtSecret());
+      await jwtVerify(token, getJwtSecret(config));
 
-      // Add token to blacklist
-      tokenBlacklist.add(token);
-
-      // If we have expiry info, we can set up automatic cleanup
-      if (payload.exp) {
-        const timeUntilExpiry = payload.exp * 1000 - Date.now();
-        if (timeUntilExpiry > 0) {
-          setTimeout(() => {
-            tokenBlacklist.delete(token);
-          }, timeUntilExpiry);
-        }
-      }
+      // Revoke the token. KV-backed blacklists use built-in TTL;
+      // in-memory sets grow by one entry per logout (negligible).
+      await blacklist.add(token);
 
       return { success: true };
     } catch {
@@ -98,19 +85,19 @@ export class AuthService {
     }
   }
 
-  static async getUserById(userId: string) {
-    const user = await UserModel.findById(userId);
+  static async getUserById(db: AppDb, userId: string) {
+    const user = await UserModel.findById(db, userId);
     return user ? UserModel.toResponse(user) : null;
   }
 
-  static async register(userData: CreateUserData): Promise<AuthResponse> {
-    const existingUser = await UserModel.findByEmail(userData.email);
+  static async register(db: AppDb, userData: CreateUserData, config: Config): Promise<AuthResponse> {
+    const existingUser = await UserModel.findByEmail(db, userData.email);
     if (existingUser) {
       throw new ConflictError('Email already registered');
     }
 
-    const user = await UserModel.create(userData);
-    const token = await AuthService.generateToken(user.user_id);
+    const user = await UserModel.create(db, userData);
+    const token = await AuthService.generateToken(user.user_id, config);
 
     return {
       token,

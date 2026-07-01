@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import { db } from '../config/drizzle';
 import { users } from '../config/schema';
 import bcrypt from 'bcryptjs';
+import type { AppDb } from '../core/db';
 
 export interface User {
   id: string;
@@ -28,17 +28,17 @@ export interface UserResponse {
 }
 
 export class UserModel {
-  static async findByEmail(email: string): Promise<User | null> {
+  static async findByEmail(db: AppDb, email: string): Promise<User | null> {
     const result = await db.select().from(users).where(eq(users.email, email));
     return result.length > 0 ? (result[0] as User) : null;
   }
 
-  static async findById(userId: string): Promise<User | null> {
+  static async findById(db: AppDb, userId: string): Promise<User | null> {
     const result = await db.select().from(users).where(eq(users.id, userId));
     return result.length > 0 ? (result[0] as User) : null;
   }
 
-  static async create(userData: CreateUserData): Promise<UserResponse> {
+  static async create(db: AppDb, userData: CreateUserData): Promise<UserResponse> {
     const [created] = await db
       .insert(users)
       .values({

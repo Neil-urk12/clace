@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import { db } from '../config/drizzle';
 import { users } from '../config/schema';
 import { NotFoundError, ValidationError } from '../lib/errors';
 import { UserModel, User } from './User';
+import type { AppDb } from '../core/db';
 
 export interface UserProfile {
   name: string;
@@ -14,7 +14,7 @@ export interface UserProfile {
 }
 
 export class ProfileModel {
-  static async getUserProfile(userId: string): Promise<UserProfile> {
+  static async getUserProfile(db: AppDb, userId: string): Promise<UserProfile> {
     const result = await db.select().from(users).where(eq(users.id, userId));
 
     if (result.length === 0) {
@@ -40,7 +40,7 @@ export class ProfileModel {
     };
   }
 
-  static async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+  static async updateUserProfile(db: AppDb, userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     await db.transaction(async (tx) => {
       if (updates.name) {
         await tx
@@ -53,10 +53,10 @@ export class ProfileModel {
       }
     });
 
-    return await this.getUserProfile(userId);
+    return await this.getUserProfile(db, userId);
   }
 
-  static async updatePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+  static async updatePassword(db: AppDb, userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
     const result = await db.select().from(users).where(eq(users.id, userId));
     const userRows = result as User[];
 

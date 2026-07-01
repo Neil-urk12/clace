@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { AuthService } from '../services/authService';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import type { RouteContext, ProtectedRouteContext } from '../types/context';
 
 const LoginBody = t.Object({
   email: t.String(),
@@ -15,25 +16,33 @@ const RegisterBody = t.Object({
 });
 
 export const authRoutes = new Elysia({ prefix: '/api/auth' })
-  .post('/login', async ({ body }) => AuthService.login(body), {
+  .post('/login', async (ctx: any) => {
+    const { body, db, config } = ctx as RouteContext;
+    return AuthService.login(db, body, config);
+  }, {
     body: LoginBody,
   })
-  .post('/register', async ({ body }) => AuthService.register({
-    full_name: body.full_name,
-    email: body.email,
-    password: body.password,
-    is_class_president: body.is_class_president ?? false,
-  }), {
+  .post('/register', async (ctx: any) => {
+    const { body, db, config } = ctx as RouteContext;
+    return AuthService.register(db, {
+      full_name: body.full_name,
+      email: body.email,
+      password: body.password,
+      is_class_president: body.is_class_president ?? false,
+    }, config);
+  }, {
     body: RegisterBody,
   });
 
 const protectedAuthRoutes = new Elysia()
   .use(authMiddleware)
-  .post('/logout', ({ headers, userId }) =>
-    AuthService.logout((headers.authorization ?? '').replace('Bearer ', ''))
-  )
-  .get('/me', async ({ userId }) => {
-    const user = await AuthService.getUserById(userId);
+  .post('/logout', (ctx: any) => {
+    const { headers, config, blacklist } = ctx as ProtectedRouteContext;
+    return AuthService.logout((headers.authorization ?? '').replace('Bearer ', ''), config, blacklist);
+  })
+  .get('/me', async (ctx: any) => {
+    const { db, userId } = ctx as ProtectedRouteContext;
+    const user = await AuthService.getUserById(db, userId);
     if (!user) return null;
     return user;
   });
