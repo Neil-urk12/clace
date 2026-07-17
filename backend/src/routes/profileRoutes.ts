@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
-import { ProfileModel } from '../models/Profile';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { ValidationError } from '../lib/errors';
 import type { ProtectedRouteContext } from '../types/context';
 
 const UpdateProfileBody = t.Object({
@@ -15,33 +15,41 @@ const UpdatePasswordBody = t.Object({
 
 export const profileRoutes = new Elysia({ prefix: '/api/profile' })
   .use(authMiddleware)
-
-  // GET /api/profile - Get user profile
-  .get('/', (ctx: any) => {
-    const { db, userId } = ctx as ProtectedRouteContext;
-    return ProfileModel.getUserProfile(db, userId);
+  .get('/', async (ctx: any) => {
+    const { userStore, userId } = ctx as ProtectedRouteContext;
+    const user = await userStore.findById(userId);
+    return {
+      name: user.fullName,
+      email: user.email,
+      avatar: user.avatarUrl,
+      role: user.role,
+      joinDate: user.joinDateFormatted,
+    };
   })
-
-  // PATCH /api/profile - Update user profile
-  .patch('/', (ctx: any) => {
-    const { db, userId, body } = ctx as ProtectedRouteContext;
-    return ProfileModel.updateUserProfile(db, userId, body);
+  .patch('/', async (ctx: any) => {
+    const { userStore, userId, body } = ctx as ProtectedRouteContext;
+    const user = await userStore.update(userId, {
+      fullName: body.name,
+      email: body.email,
+    });
+    return {
+      name: user.fullName,
+      email: user.email,
+      avatar: user.avatarUrl,
+      role: user.role,
+      joinDate: user.joinDateFormatted,
+    };
   }, {
     body: UpdateProfileBody,
   })
-
-  // POST /api/profile/password - Update password
   .post('/password', async (ctx: any) => {
-    const { db, userId, body } = ctx as ProtectedRouteContext;
-    const success = await ProfileModel.updatePassword(
-      db,
-      userId,
-      body.currentPassword,
-      body.newPassword
-    );
-    if (!success) {
-      return { success: false, message: 'Failed to update password' };
+    const { userStore, userId, body } = ctx as ProtectedRouteContext;
+    const isValid = await userStore.verifyCredential(userId, body.currentPassword);
+    if (!isValid) {
+      throw new ValidationError('Current password is incorrect');
     }
+
+    await userStore.updatePassword(userId, body.newPassword);
     return { success: true, message: 'Password updated successfully' };
   }, {
     body: UpdatePasswordBody,
