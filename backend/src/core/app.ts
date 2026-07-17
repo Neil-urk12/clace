@@ -9,6 +9,8 @@ import { errorHandler } from '../plugins/errorHandler';
 import { getConfig, type Env } from './config';
 import { getBunDb, createWorkersDb } from './db';
 import { InMemoryTokenBlacklist, KvTokenBlacklist, type TokenBlacklist } from '../services/tokenBlacklist';
+import { DrizzleUserStore } from '../services/drizzleUserStore';
+import type { UserStore } from '../models/UserModel';
 
 /**
  * Create the Elysia app with dependency injection.
@@ -17,7 +19,7 @@ import { InMemoryTokenBlacklist, KvTokenBlacklist, type TokenBlacklist } from '.
  * `.derive()` at the top of the chain. All routes composed after it have
  * access to these properties.
  */
-export const createApp = (env?: Env | Record<string, string>, adapter?: ElysiaAdapter) => {
+export const createApp = (env?: Env | Record<string, string>, adapter?: ElysiaAdapter, customUserStore?: UserStore) => {
   const config = getConfig(env);
 
   // Token blacklist: KV-backed for Workers (cross-isolate), in-memory for Bun.
@@ -34,7 +36,9 @@ export const createApp = (env?: Env | Record<string, string>, adapter?: ElysiaAd
         ? await createWorkersDb(config.DATABASE_URL)
         : getBunDb(config.DATABASE_URL);
 
-      return { db, config, blacklist };
+      const userStore = customUserStore ?? new DrizzleUserStore(db);
+
+      return { db, config, blacklist, userStore };
     })
     .use(cors())
     .use(successWrap)

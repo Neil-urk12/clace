@@ -1,6 +1,11 @@
 // backend/src/worker.ts
 
-import { CloudflareAdapter } from 'elysia/adapter/cloudflare-worker';
-import { app } from './core/app';
+import { createApp } from './core/app';
+import type { Env } from './core/config';
 
-export default CloudflareAdapter(app);
+export default {
+  fetch(request: Request, env: Env, _ctx: unknown) {
+    const app = createApp(env);
+    return app.fetch(request);
+  },
+} satisfies { fetch(request: Request, env: Env, ctx: unknown): Response | Promise<Response> };
