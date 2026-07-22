@@ -101,3 +101,38 @@ cd backend
 bun src/index.ts
 ```
 ## Deployment Notes
+
+## Deployment
+
+### Docker
+
+Build and run the backend container:
+
+```bash
+make docker-build
+make docker-run
+```
+
+The API will be available at `http://localhost:3000`.
+
+### Cloudflare Workers
+
+Set up secrets:
+
+```bash
+cd backend
+bunx wrangler secret put DATABASE_URL
+bunx wrangler secret put JWT_SECRET
+```
+
+Deploy:
+
+```bash
+make workers-deploy
+```
+
+Local development with Workers:
+
+```bash
+make workers-dev
+```

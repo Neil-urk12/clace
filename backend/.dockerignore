@@ -1,0 +1,8 @@
+# backend/.dockerignore
+
+node_modules
+.env
+.env.*
+.git
+dist
+.wrangler

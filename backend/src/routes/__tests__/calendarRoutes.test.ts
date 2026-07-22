@@ -4,16 +4,14 @@
  * the schema, which we prove by asserting the malformed-body case.
  */
 import { describe, test, expect } from 'bun:test';
-import { Elysia } from 'elysia';
-import { errorHandler } from '../../plugins/errorHandler';
-import { calendarRoutes } from '../calendarRoutes';
+import { createApp } from '../../core/app';
 import { AuthService } from '../../services/authService';
+import { getConfig } from '../../core/config';
 
-const TOKEN = AuthService.generateToken('00000000-0000-0000-0000-000000000000');
+const config = getConfig();
+const TOKEN = await AuthService.generateToken('00000000-0000-0000-0000-000000000000', config);
 
-const app = new Elysia()
-  .use(errorHandler)
-  .use(calendarRoutes);
+const app = createApp();
 
 const authed = (path: string, init: RequestInit = {}): Request =>
   new Request(`http://localhost${path}`, {

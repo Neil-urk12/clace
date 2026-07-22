@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { EventModel, CreateEventInput, UpdateEventData } from '../models/Event';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import type { ProtectedRouteContext } from '../types/context';
 
 const CreateEventBody = t.Object({
   title: t.String(),
@@ -43,13 +44,20 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
   .use(authMiddleware)
 
   // GET /api/events - Get all events for authenticated user
-  .get('/', ({ userId }) => EventModel.getAllForUser(userId))
+  .get('/', (ctx: any) => {
+    const { db, userId } = ctx as ProtectedRouteContext;
+    return EventModel.getAllForUser(db, userId);
+  })
 
   // GET /api/events/:id - Get specific event by ID
-  .get('/:id', ({ params, userId }) => EventModel.getByIdForUser(params.id, userId))
+  .get('/:id', (ctx: any) => {
+    const { params, db, userId } = ctx as ProtectedRouteContext;
+    return EventModel.getByIdForUser(db, params.id, userId);
+  })
 
   // POST /api/events - Create new event
-  .post('/', ({ body, userId, set }) => {
+  .post('/', (ctx: any) => {
+    const { body, db, userId, set } = ctx as ProtectedRouteContext;
     const eventData: CreateEventInput = {
       title: body.title,
       description: body.description,
@@ -65,13 +73,14 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       color: body.color,
     };
     set.status = 201;
-    return EventModel.createForUser(eventData, userId);
+    return EventModel.createForUser(db, eventData, userId);
   }, {
     body: CreateEventBody,
   })
 
   // PUT /api/events/:id - Update event
-  .put('/:id', ({ params, body, userId }) => {
+  .put('/:id', (ctx: any) => {
+    const { params, body, db, userId } = ctx as ProtectedRouteContext;
     const updateData: UpdateEventData = {};
     if (body.title !== undefined) updateData.title = body.title;
     if (body.description !== undefined) updateData.description = body.description;
@@ -85,27 +94,32 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
     if (body.location !== undefined) updateData.location = body.location;
     if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
     if (body.color !== undefined) updateData.color = body.color;
-    return EventModel.updateForUser(params.id, updateData, userId);
+    return EventModel.updateForUser(db, params.id, updateData, userId);
   }, {
     body: UpdateEventBody,
   })
 
   // DELETE /api/events/:id - Delete event
-  .delete('/:id', ({ params, userId }) => EventModel.deleteForUser(params.id, userId))
+  .delete('/:id', (ctx: any) => {
+    const { params, db, userId } = ctx as ProtectedRouteContext;
+    return EventModel.deleteForUser(db, params.id, userId);
+  })
 
   // GET /api/events/filter - Get filtered events
-  .get('/filter', ({ query, userId }) => {
+  .get('/filter', (ctx: any) => {
+    const { query, db, userId } = ctx as ProtectedRouteContext;
     const filters: { start_datetime?: Date; end_datetime?: Date } = {};
-    if (query.startDate) filters.start_datetime = query.startDate;
-    if (query.endDate) filters.end_datetime = query.endDate;
-    return EventModel.filterForUser(filters, userId);
+    if (query.startDate) filters.start_datetime = query.startDate as Date;
+    if (query.endDate) filters.end_datetime = query.endDate as Date;
+    return EventModel.filterForUser(db, filters, userId);
   }, {
     query: FilterQuery,
   })
 
   // POST /api/events/bulk - Create multiple events
-  .post('/bulk', ({ body, userId, set }) => {
-    const eventsData: CreateEventInput[] = body.map((event) => ({
+  .post('/bulk', (ctx: any) => {
+    const { body, db, userId, set } = ctx as ProtectedRouteContext;
+    const eventsData: CreateEventInput[] = body.map((event: any) => ({
       title: event.title,
       description: event.description,
       start_datetime: event.startDate,
@@ -120,10 +134,13 @@ export const eventRoutes = new Elysia({ prefix: '/api/events' })
       color: event.color,
     }));
     set.status = 201;
-    return EventModel.bulkCreateForUser(eventsData, userId);
+    return EventModel.bulkCreateForUser(db, eventsData, userId);
   }, {
     body: BulkCreateBody,
   })
 
   // DELETE /api/events - Delete all events for user
-  .delete('/', ({ userId }) => EventModel.deleteAllForUser(userId));
+  .delete('/', (ctx: any) => {
+    const { db, userId } = ctx as ProtectedRouteContext;
+    return EventModel.deleteAllForUser(db, userId);
+  });

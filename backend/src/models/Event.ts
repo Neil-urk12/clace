@@ -1,8 +1,8 @@
 import { eq, and, gte, lte } from 'drizzle-orm';
-import { db } from '../config/drizzle';
 import { events } from '../config/schema';
 import { Calendar, CalendarModel } from './Calendar';
 import { NotFoundError, ValidationError } from '../lib/errors';
+import type { AppDb } from '../core/db';
 
 export interface Event {
   id: string;
@@ -83,62 +83,63 @@ export interface EventFilters {
 export class EventModel {
   // === PUBLIC SEAM ===
 
-  static async getAllForUser(userId: string): Promise<EventResponse[]> {
-    const calendar = await this.getCalendarForUser(userId);
-    const eventsList = await this.findAllByCalendar(calendar.id);
+  static async getAllForUser(db: AppDb, userId: string): Promise<EventResponse[]> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    const eventsList = await this.findAllByCalendar(db, calendar.id);
     return this.toResponseArray(eventsList);
   }
 
-  static async getByIdForUser(eventId: string, userId: string): Promise<EventResponse> {
-    const calendar = await this.getCalendarForUser(userId);
-    const event = await this.findById(eventId, calendar.id);
+  static async getByIdForUser(db: AppDb, eventId: string, userId: string): Promise<EventResponse> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    const event = await this.findById(db, eventId, calendar.id);
     if (!event) {
       throw new NotFoundError('Event not found');
     }
     return this.toResponse(event);
   }
 
-  static async createForUser(eventData: CreateEventInput, userId: string): Promise<EventResponse> {
-    const calendar = await this.getCalendarForUser(userId);
-    return this.insertRow({
+  static async createForUser(db: AppDb, eventData: CreateEventInput, userId: string): Promise<EventResponse> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    return this.insertRow(db, {
       ...eventData,
       calendar_id: calendar.id,
       creator_user_id: userId,
     });
   }
 
-  static async updateForUser(eventId: string, updateData: UpdateEventData, userId: string): Promise<EventResponse> {
-    const calendar = await this.getCalendarForUser(userId);
-    return this.updateRow(eventId, calendar.id, updateData);
+  static async updateForUser(db: AppDb, eventId: string, updateData: UpdateEventData, userId: string): Promise<EventResponse> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    return this.updateRow(db, eventId, calendar.id, updateData);
   }
 
-  static async deleteForUser(eventId: string, userId: string): Promise<{ message: string }> {
-    const calendar = await this.getCalendarForUser(userId);
-    const deleted = await this.deleteRow(eventId, calendar.id);
+  static async deleteForUser(db: AppDb, eventId: string, userId: string): Promise<{ message: string }> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    const deleted = await this.deleteRow(db, eventId, calendar.id);
     if (!deleted) {
       throw new NotFoundError('Event not found or no permission to delete');
     }
     return { message: 'Event deleted successfully' };
   }
 
-  static async deleteAllForUser(userId: string): Promise<{ message: string }> {
-    const calendar = await this.getCalendarForUser(userId);
-    const deletedCount = await this.deleteAllByCalendar(calendar.id);
+  static async deleteAllForUser(db: AppDb, userId: string): Promise<{ message: string }> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    const deletedCount = await this.deleteAllByCalendar(db, calendar.id);
     return { message: `${deletedCount} events deleted successfully` };
   }
 
-  static async filterForUser(filters: EventFilters, userId: string): Promise<EventResponse[]> {
-    const calendar = await this.getCalendarForUser(userId);
-    const eventsList = await this.findByFilter(calendar.id, filters);
+  static async filterForUser(db: AppDb, filters: EventFilters, userId: string): Promise<EventResponse[]> {
+    const calendar = await this.getCalendarForUser(db, userId);
+    const eventsList = await this.findByFilter(db, calendar.id, filters);
     return this.toResponseArray(eventsList);
   }
 
-  static async bulkCreateForUser(eventsData: CreateEventInput[], userId: string): Promise<EventResponse[]> {
-    const calendar = await this.getCalendarForUser(userId);
+  static async bulkCreateForUser(db: AppDb, eventsData: CreateEventInput[], userId: string): Promise<EventResponse[]> {
+    const calendar = await this.getCalendarForUser(db, userId);
     return db.transaction(async (tx) => {
       const results: EventResponse[] = [];
       for (const eventData of eventsData) {
         const created = await this.insertRow(
+          db,
           {
             ...eventData,
             calendar_id: calendar.id,
@@ -154,15 +155,15 @@ export class EventModel {
 
   // === PRIVATE ===
 
-  private static async getCalendarForUser(userId: string): Promise<Calendar> {
-    const calendar = await CalendarModel.findByUserId(userId);
+  private static async getCalendarForUser(db: AppDb, userId: string): Promise<Calendar> {
+    const calendar = await CalendarModel.findByUserId(db, userId);
     if (!calendar) {
       throw new NotFoundError('No calendar found for user');
     }
     return calendar;
   }
 
-  private static async findById(eventId: string, calendarId: string, tx?: any): Promise<Event | null> {
+  private static async findById(db: AppDb, eventId: string, calendarId: string, tx?: any): Promise<Event | null> {
     const executor = tx ?? db;
     const result = await executor
       .select()
@@ -171,12 +172,12 @@ export class EventModel {
     return result.length > 0 ? (result[0] as Event) : null;
   }
 
-  private static async findAllByCalendar(calendarId: string): Promise<Event[]> {
+  private static async findAllByCalendar(db: AppDb, calendarId: string): Promise<Event[]> {
     const result = await db.select().from(events).where(eq(events.calendarId, calendarId)).orderBy(events.startDatetime);
     return result as Event[];
   }
 
-  private static async findByFilter(calendarId: string, filters: EventFilters): Promise<Event[]> {
+  private static async findByFilter(db: AppDb, calendarId: string, filters: EventFilters): Promise<Event[]> {
     const conditions = [eq(events.calendarId, calendarId)];
 
     if (filters.start_datetime) {
@@ -190,7 +191,7 @@ export class EventModel {
     return result as Event[];
   }
 
-  private static async insertRow(eventData: CreateEventData, tx?: any): Promise<EventResponse> {
+  private static async insertRow(db: AppDb, eventData: CreateEventData, tx?: any): Promise<EventResponse> {
     const executor = tx ?? db;
 
     const [created] = await executor
@@ -216,7 +217,7 @@ export class EventModel {
     return this.toResponse(created as Event);
   }
 
-  private static async updateRow(eventId: string, calendarId: string, updateData: UpdateEventData): Promise<EventResponse> {
+  private static async updateRow(db: AppDb, eventId: string, calendarId: string, updateData: UpdateEventData): Promise<EventResponse> {
     const updateFields: Partial<typeof events.$inferInsert> = {};
 
     if (updateData.title !== undefined) updateFields.title = updateData.title;
@@ -238,14 +239,14 @@ export class EventModel {
 
     updateFields.updatedAt = new Date();
 
-    const existing = await this.findById(eventId, calendarId);
+    const existing = await this.findById(db, eventId, calendarId);
     if (!existing) {
       throw new NotFoundError('Event not found or no permission to update');
     }
 
     await db.update(events).set(updateFields).where(and(eq(events.id, eventId), eq(events.calendarId, calendarId)));
 
-    const updatedEvent = await this.findById(eventId, calendarId);
+    const updatedEvent = await this.findById(db, eventId, calendarId);
     if (!updatedEvent) {
       throw new Error('Failed to retrieve updated event');
     }
@@ -253,16 +254,16 @@ export class EventModel {
     return this.toResponse(updatedEvent);
   }
 
-  private static async deleteRow(eventId: string, calendarId: string): Promise<boolean> {
-    const existing = await this.findById(eventId, calendarId);
+  private static async deleteRow(db: AppDb, eventId: string, calendarId: string): Promise<boolean> {
+    const existing = await this.findById(db, eventId, calendarId);
     if (!existing) return false;
 
     await db.delete(events).where(and(eq(events.id, eventId), eq(events.calendarId, calendarId)));
     return true;
   }
 
-  private static async deleteAllByCalendar(calendarId: string): Promise<number> {
-    const allEvents = await this.findAllByCalendar(calendarId);
+  private static async deleteAllByCalendar(db: AppDb, calendarId: string): Promise<number> {
+    const allEvents = await this.findAllByCalendar(db, calendarId);
     const count = allEvents.length;
 
     await db.delete(events).where(eq(events.calendarId, calendarId));

@@ -4,13 +4,9 @@
  * stays as manual QA (no DB).
  */
 import { describe, test, expect } from 'bun:test';
-import { Elysia } from 'elysia';
-import { errorHandler } from '../../plugins/errorHandler';
-import { authRoutes } from '../authRoutes';
+import { createApp } from '../../core/app';
 
-const app = new Elysia()
-  .use(errorHandler)
-  .use(authRoutes);
+const app = createApp();
 
 describe('authRoutes — POST /api/auth/login', () => {
   test('empty body → 400', async () => {
@@ -63,10 +59,6 @@ describe('authRoutes — POST /api/auth/register', () => {
   });
 
   test('omitting is_class_president is allowed (defaults to false)', async () => {
-    // The schema validates; the service path is exercised by manual QA
-    // because it requires a live DB. This test confirms the schema accepts
-    // a body without the optional field — it will fail downstream with
-    // a 5xx from the service, not a 400 from the schema.
     const res = await app.handle(new Request('http://localhost/api/auth/register', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
